@@ -2432,6 +2432,22 @@ namespace transport
 
     template <typename number>
     void
+    data_manager_sqlite3<number>::pull_zeta_ns_time_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, unsigned int k_serial, std::vector<number>& sample)
+      {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_ns_item>(
+          db, query, k_serial, sample, pipe->get_worker_number());
+      }
+
+
+    template <typename number>
+    void
     data_manager_sqlite3<number>::pull_zeta_threepf_time_sample
       (datapipe<number>* pipe, const derived_data::SQL_query& query, unsigned int k_serial, std::vector<number>& sample)
       {
@@ -2632,6 +2648,22 @@ namespace transport
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
         sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_twopf_item>(
+          db, query, t_serial, sample, pipe->get_worker_number());
+      }
+
+
+    template <typename number>
+    void
+    data_manager_sqlite3<number>::pull_zeta_ns_kconfig_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, unsigned int t_serial, std::vector<number>& sample)
+      {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_ns_item>(
           db, query, t_serial, sample, pipe->get_worker_number());
       }
 

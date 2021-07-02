@@ -348,6 +348,9 @@ namespace transport
         //! Generate a new zeta-correlation-function time tag
         zeta_twopf_time_data_tag<number> new_zeta_twopf_time_data_tag(const twopf_kconfig& kdata);
 
+        //! Generate a new zeta spectral index time tag
+        zeta_ns_time_data_tag<number> new_zeta_ns_time_data_tag(const twopf_kconfig& kdata);
+
         //! Generate a new zeta-correlationn-function time tag
         zeta_threepf_time_data_tag<number> new_zeta_threepf_time_data_tag(const threepf_kconfig& kdata);
 
@@ -356,6 +359,9 @@ namespace transport
 
         //! Generate a new zeta-correlation-function kconfig tag
         zeta_twopf_kconfig_data_tag<number> new_zeta_twopf_kconfig_data_tag(unsigned int tserial);
+
+        //! Generate a new zeta spectral index kconfig tag
+        zeta_ns_kconfig_data_tag<number> new_zeta_ns_kconfig_data_tag(unsigned int tserial);
 
         //! Generate a new zeta-correlation-function kconfig tag
         zeta_threepf_kconfig_data_tag<number> new_zeta_threepf_kconfig_data_tag(unsigned int tserial);
@@ -385,9 +391,11 @@ namespace transport
         friend class cf_time_data_tag<number>;
         friend class cf_kconfig_data_tag<number>;
         friend class zeta_twopf_time_data_tag<number>;
+        friend class zeta_ns_time_data_tag<number>;
         friend class zeta_threepf_time_data_tag<number>;
         friend class zeta_reduced_bispectrum_time_data_tag<number>;
         friend class zeta_twopf_kconfig_data_tag<number>;
+        friend class zeta_ns_kconfig_data_tag<number>;
         friend class zeta_threepf_kconfig_data_tag<number>;
         friend class zeta_reduced_bispectrum_kconfig_data_tag<number>;
 		    friend class fNL_time_data_tag<number>;

@@ -50,6 +50,7 @@
 
 namespace transport
 	{
+
     //! zeta two-point function time data tag
     template <typename number>
     class zeta_twopf_time_data_tag: public data_tag<number>
@@ -106,6 +107,64 @@ namespace transport
         const twopf_kconfig kdata;
 
 	    };
+
+
+    //! zeta spectral index  time data tag
+    template <typename number>
+    class zeta_ns_time_data_tag: public data_tag<number>
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        zeta_ns_time_data_tag(datapipe<number>* p, const twopf_kconfig& k)
+          : data_tag<number>(p),
+            kdata(k)
+          {
+          }
+
+        virtual ~zeta_ns_time_data_tag() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! check for tag equality
+        bool operator==(const data_tag<number>& obj) const override;
+
+        //! pull data corresponding to this tag
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+
+        //! identify this tag
+        std::string name() const override { std::ostringstream msg; msg << "zeta spectral index, kserial =  " << kdata.serial; return(msg.str()); }
+
+
+        // CLONE
+
+      public:
+
+        //! copy this object
+        zeta_ns_time_data_tag<number>* clone() const override { return new zeta_ns_time_data_tag<number>(static_cast<const zeta_ns_time_data_tag<number>&>(*this)); }
+
+
+        // HASH
+
+      public:
+
+        //! hash
+        unsigned int hash() const override { return((this->kdata.serial*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+
+
+        // INTERNAL DATA
+
+      protected:
+
+        //! kserial - controls which k serial number is sampled
+        const twopf_kconfig kdata;
+
+      };
 
 
     //! zeta two-point function time data tag
@@ -282,6 +341,64 @@ namespace transport
 	    };
 
 
+    //! zeta spectral index kconfig data tag
+    template <typename number>
+    class zeta_ns_kconfig_data_tag: public data_tag<number>
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        zeta_ns_kconfig_data_tag(datapipe<number>* p, unsigned int ts)
+          : data_tag<number>(p),
+            tserial(ts)
+          {
+          }
+
+        virtual ~zeta_ns_kconfig_data_tag() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! check for tag equality
+        bool operator==(const data_tag<number>& obj) const override;
+
+        //! pull data corresponding to this tag
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+
+        //! identify this tag
+        std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, tserial =  " << tserial; return(msg.str()); }
+
+
+        // CLONE
+
+      public:
+
+        //! copy this object
+        zeta_ns_kconfig_data_tag<number>* clone() const override { return new zeta_ns_kconfig_data_tag<number>(static_cast<const zeta_ns_kconfig_data_tag<number>&>(*this)); }
+
+
+        // HASH
+
+      public:
+
+        //! hash
+        unsigned int hash() const override { return((this->tserial*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+
+
+        // INTERNAL DATA
+
+      protected:
+
+        //! tserial - controls which t serial number is sampled
+        const unsigned int tserial;
+
+      };
+
+
     //! zeta correlation-function kconfig data tag
     template <typename number>
     class zeta_threepf_kconfig_data_tag: public data_tag<number>
@@ -418,6 +535,22 @@ namespace transport
 
 
     template <typename number>
+    void zeta_ns_time_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
+      {
+        // check that we are attached to a content group
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+        BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta ns time sample request, k-configuration " << this->kdata.kserial;
+#endif
+
+        timing_instrument timer(this->pipe->database_timer);
+        this->pipe->data_mgr.pull_zeta_ns_time_sample(this->pipe, query, this->kdata.serial, sample);
+      }
+
+
+    template <typename number>
     void zeta_threepf_time_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
 	    {
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
@@ -460,6 +593,21 @@ namespace transport
         timing_instrument timer(this->pipe->database_timer);
         this->pipe->data_mgr.pull_zeta_twopf_kconfig_sample(this->pipe, query, this->tserial, sample);
 	    }
+
+
+    template <typename number>
+    void zeta_ns_kconfig_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
+      {
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+        BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta ns kconfig sample request, t-serial " << this->tserial;
+#endif
+
+        timing_instrument timer(this->pipe->database_timer);
+        this->pipe->data_mgr.pull_zeta_ns_kconfig_sample(this->pipe, query, this->tserial, sample);
+      }
 
 
     template <typename number>
@@ -506,6 +654,16 @@ namespace transport
 
 
     template <typename number>
+    bool zeta_ns_time_data_tag<number>::operator==(const data_tag<number>& obj) const
+      {
+        const auto* zeta_tag = dynamic_cast<const zeta_ns_time_data_tag<number>*>(&obj);
+
+        if(zeta_tag == nullptr) return(false);
+        return(this->kdata.serial == zeta_tag->kdata.serial);
+      }
+
+
+    template <typename number>
     bool zeta_threepf_time_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
         const auto* zeta_tag = dynamic_cast<const zeta_threepf_time_data_tag<number>*>(&obj);
@@ -533,6 +691,16 @@ namespace transport
         if(zeta_tag == nullptr) return(false);
         return(this->tserial == zeta_tag->tserial);
 	    }
+
+
+    template <typename number>
+    bool zeta_ns_kconfig_data_tag<number>::operator==(const data_tag<number>& obj) const
+      {
+        const auto* zeta_tag = dynamic_cast<const zeta_ns_kconfig_data_tag<number>*>(&obj);
+
+        if(zeta_tag == nullptr) return(false);
+        return(this->tserial == zeta_tag->tserial);
+      }
 
 
     template <typename number>

@@ -136,6 +136,13 @@ namespace transport
 	        };
 
 
+        //! Used to tag a zeta spectral index contribution via data traits, but has no meaning beyond this
+        class zeta_ns_item
+          {
+          public:
+          };
+
+
         //! Stores an fNL configuration
         class fNL_item
 	        {

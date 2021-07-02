@@ -41,9 +41,11 @@ namespace transport
 		template <typename number> class cf_time_data_tag;
 		template <typename number> class cf_kconfig_data_tag;
 		template <typename number> class zeta_twopf_time_data_tag;
+		template <typename number> class zeta_ns_time_data_tag;
 		template <typename number> class zeta_threepf_time_data_tag;
 		template <typename number> class zeta_reduced_bispectrum_time_data_tag;
 		template <typename number> class zeta_twopf_kconfig_data_tag;
+		template <typename number> class zeta_ns_kconfig_data_tag;
 		template <typename number> class zeta_threepf_kconfig_data_tag;
 		template <typename number> class zeta_reduced_bispectrum_kconfig_data_tag;
 		template <typename number> class fNL_time_data_tag;

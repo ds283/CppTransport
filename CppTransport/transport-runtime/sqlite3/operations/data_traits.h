@@ -192,6 +192,13 @@ namespace transport
 					};
 
 
+        template<typename number> struct data_traits<number, typename postintegration_items<number>::zeta_ns_item>
+          {
+            static std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE); }
+            static std::string column_name()           { return("ns"); }
+          };
+
+
         template <typename number> struct data_traits<number, typename postintegration_items<number>::gauge_xfm1_item>
           {
             static int number_elements(unsigned int Nfields) { return(static_cast<int>(2*Nfields)); }

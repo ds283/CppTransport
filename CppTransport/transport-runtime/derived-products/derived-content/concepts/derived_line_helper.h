@@ -75,13 +75,17 @@ namespace transport
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES)                         return std::make_unique< twopf_time_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES)                       return std::make_unique< threepf_time_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_TIME_SERIES)                  return std::make_unique< tensor_twopf_time_series<number> >(reader, finder);
+                    else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_NT_TIME_SERIES)               return std::make_unique< tensor_nt_time_series<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES)                    return std::make_unique< zeta_twopf_time_series<number> >(reader, finder);
+                    else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_NS_TIME_SERIES)                 return std::make_unique< zeta_ns_time_series<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES)                  return std::make_unique< zeta_threepf_time_series<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES)       return std::make_unique< zeta_reduced_bispectrum_time_series<number> >(reader, finder);
 			              else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES)                   return std::make_unique< twopf_wavenumber_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES)                 return std::make_unique< threepf_wavenumber_series<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_WAVENUMBER_SERIES)            return std::make_unique< tensor_twopf_wavenumber_series<number> >(reader, finder);
+                    else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_NT_WAVENUMBER_SERIES)         return std::make_unique< tensor_nt_wavenumber_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_WAVENUMBER_SERIES)              return std::make_unique< zeta_twopf_wavenumber_series<number> >(reader, finder);
+                    else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_NS_WAVENUMBER_SERIES)           return std::make_unique< zeta_ns_wavenumber_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES)            return std::make_unique< zeta_threepf_wavenumber_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_WAVENUMBER_SERIES) return std::make_unique< zeta_reduced_bispectrum_wavenumber_series<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES)                           return std::make_unique< fNL_time_series<number> >(reader, finder);

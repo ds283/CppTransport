@@ -894,11 +894,13 @@ SET(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES
   transport-runtime/derived-products/derived-content/concepts/lines/fNL_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/r_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/tensor_twopf_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/tensor_nt_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/threepf_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/twopf_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/zeta_reduced_bispectrum_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/zeta_threepf_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/zeta_twopf_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/zeta_ns_line.h
   )
 
 SET(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_SERIES_FILES
@@ -1001,6 +1003,8 @@ SET(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES
   transport-runtime/localizations/messages_en/derived-products/derived_line.h
   transport-runtime/localizations/messages_en/derived-products/derived_product.h
   transport-runtime/localizations/messages_en/derived-products/fNL_line.h
+  transport-runtime/localizations/messages_en/derived-products/zeta_twopf_spectral_line.h
+  transport-runtime/localizations/messages_en/derived-products/tensor_twopf_spectral_line.h
   transport-runtime/localizations/messages_en/derived-products/line_asciitable.h
   transport-runtime/localizations/messages_en/derived-products/line_collection.h
   transport-runtime/localizations/messages_en/derived-products/line_plot2d.h

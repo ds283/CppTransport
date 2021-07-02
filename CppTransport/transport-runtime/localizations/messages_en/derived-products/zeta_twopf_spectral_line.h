@@ -1,7 +1,7 @@
 //
-// Created by David Seery on 19/05/2014.
+// Created by David Seery on 01/07/2021.
 // --@@
-// Copyright (c) 2016 University of Sussex. All rights reserved.
+// Copyright (c) 2021 University of Sussex. All rights reserved.
 //
 // This file is part of the CppTransport platform.
 //
@@ -23,9 +23,8 @@
 // --@@
 //
 
-
-#ifndef CPPTRANSPORT_MESSAGES_EN_FNL_LINE_PRODUCT_H
-#define CPPTRANSPORT_MESSAGES_EN_FNL_LINE_PRODUCT_H
+#ifndef CPPTRANSPORT_MESSAGES_EN_ZETA_TWOPF_SPECTRAL_LINE_PRODUCT_H
+#define CPPTRANSPORT_MESSAGES_EN_ZETA_TWOPF_SPECTRAL_LINE_PRODUCT_H
 
 
 namespace transport
@@ -34,12 +33,10 @@ namespace transport
     namespace derived_data
       {
 
-        constexpr auto CPPTRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE = "fNL_line error: unknown bispectrum template type";
-        constexpr auto CPPTRANSPORT_PRODUCT_FNL_TASK_NOT_THREEPF      = "fNL_line error: can't construct fNL product from non zeta-threepf task";
+        constexpr auto CPPTRANSPORT_PRODUCT_ZETA_NS_LINE_NO_SPECTRAL_DATA = "zeta_ns_line error: provided task does not collect spectral data for zeta 2pf";
 
       }   // namespace derived_data
 
   }   // namespace transport
 
-
-#endif // CPPTRANSPORT_MESSAGES_EN_FNL_LINE_PRODUCT_H
+#endif //CPPTRANSPORT_MESSAGES_EN_ZETA_TWOPF_SPECTRAL_LINE_PRODUCT_H

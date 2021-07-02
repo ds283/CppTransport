@@ -42,7 +42,8 @@ namespace transport
           {
 
             template <typename number>
-            std::unique_ptr< derived_data::derived_product<number> > deserialize(const std::string& name, Json::Value& reader, task_finder<number>& finder)
+            std::unique_ptr< derived_data::derived_product<number> > deserialize
+              (const std::string& name, Json::Value& reader, task_finder<number>& finder)
               {
                 std::string type = reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE].asString();
 

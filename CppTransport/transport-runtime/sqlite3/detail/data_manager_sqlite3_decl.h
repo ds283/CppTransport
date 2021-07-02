@@ -525,6 +525,10 @@ namespace transport
         void pull_zeta_twopf_time_sample(datapipe <number>* pipe, const derived_data::SQL_query& query,
                                          unsigned int k_serial, std::vector<number>& sample) override;
 
+        //! Pull a sample of the zeta twopf spectral index at fixed k-configuration from a datapipe
+        void pull_zeta_ns_time_sample(datapipe <number>* pipe, const derived_data::SQL_query& query,
+                                      unsigned int k_serial, std::vector<number>& sample) override;
+
         //! Pull a sample of the zeta threepf at fixed k-configuration from a datapipe
         void pull_zeta_threepf_time_sample(datapipe <number>* pipe, const derived_data::SQL_query& query,
                                            unsigned int k_serial, std::vector<number>& sample) override;
@@ -571,6 +575,10 @@ namespace transport
         //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
         void pull_zeta_twopf_kconfig_sample(datapipe <number>* pipe, const derived_data::SQL_query& query,
                                             unsigned int t_serial, std::vector<number>& sample) override;
+
+        //! Pull a kconfig sample of the zeta twopf spectral index at fixed time from a datapipe
+        void pull_zeta_ns_kconfig_sample(datapipe <number>* pipe, const derived_data::SQL_query& query,
+                                         unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta threepf at fixed time from a datapipe
         void pull_zeta_threepf_kconfig_sample(datapipe <number>* pipe, const derived_data::SQL_query& query,

@@ -58,18 +58,18 @@
 #include "transport-runtime/derived-products/utilities/wrapper.h"
 
 
-#define CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE             "template"
-#define CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL       "local"
-#define CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL "equilateral"
-#define CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL  "orthogonal"
-#define CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI         "DBI"
-
-
 namespace transport
   {
 
     namespace derived_data
       {
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE             = "template";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL       = "local";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL = "equilateral";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL  = "orthogonal";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI         = "DBI";
+
 
         //! general fNL content producer
         //! As usual, we derive virtually from derived_line<>, so concrete

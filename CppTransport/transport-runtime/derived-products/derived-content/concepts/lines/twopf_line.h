@@ -209,7 +209,7 @@ namespace transport
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
-				    if(this->dimensionless) label << CPPTRANSPORT_LATEX_DIMENSIONLESS_TWOPF << "_{";
+				    if(this->dimensionless) label << CPPTRANSPORT_LATEX_DIMENSIONLESS_TWOPF_SYMBOL << "_{";
 
 		        label << (this->twopf_meaning == twopf_type::real ? CPPTRANSPORT_LATEX_RE_SYMBOL : CPPTRANSPORT_LATEX_IM_SYMBOL) << " ";
 
@@ -243,7 +243,7 @@ namespace transport
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
-				    if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_DIMENSIONLESS_TWOPF << "[";
+				    if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_DIMENSIONLESS_TWOPF_SYMBOL << "[";
 
 		        label << (this->twopf_meaning == twopf_type::real ? CPPTRANSPORT_NONLATEX_RE_SYMBOL : CPPTRANSPORT_NONLATEX_IM_SYMBOL) << " ";
 

@@ -24,8 +24,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_TENSOR_TWOPF_LINE_H
-#define CPPTRANSPORT_TENSOR_TWOPF_LINE_H
+#ifndef CPPTRANSPORT_tensor_twopf_spectral_line_H
+#define CPPTRANSPORT_tensor_twopf_spectral_line_H
 
 
 #include <iostream>
@@ -62,17 +62,16 @@ namespace transport
     namespace derived_data
 	    {
 
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_ROOT          = "tensor-twopf-line-settings";
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_DIMENSIONLESS = "dimensionless";
-
-
-		    //! general tensor twopf content producer, suitable
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_NT_LINE_ROOT = "tensor-nt-line-settings";
+	    
+	    
+		    //! general tensor twopf spectral index content producer, suitable
 		    //! for producing content usable in eg. a 2d plot or table
 		    //! Note that we derive virtually from derived_line<> to solve the diamond
 		    //! problem -- concrete classes may inherit several derived_line<> attributes,
-		    //! eg. wavenumber_series<> and tensor_twopf_line<>
+		    //! eg. wavenumber_series<> and tensor_nt_line<>
 		    template <typename number>
-		    class tensor_twopf_line: public virtual derived_line<number>
+		    class tensor_nt_line: public virtual derived_line<number>
 			    {
 
 			      // CONSTRUCTOR, DESTRUCTOR
@@ -80,23 +79,12 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    tensor_twopf_line(const twopf_db_task<number>& tk, index_selector<2> sel);
+				    tensor_nt_line(const twopf_db_task<number>& tk, index_selector<2> sel);
 
 				    //! Deserialization constructor
-				    tensor_twopf_line(Json::Value& reader, task_finder<number>& finder);
+				    tensor_nt_line(Json::Value& reader, task_finder<number>& finder);
 
-				    virtual ~tensor_twopf_line() = default;
-
-
-            // MANAGE SETTINGS
-
-          public:
-
-            //! is this dimensionles?
-            bool is_dimensionless() const { return(this->dimensionless); }
-
-            //! set dimensionless
-            tensor_twopf_line<number>& set_dimensionless(bool g) { this->dimensionless = g; return *this; }
+				    virtual ~tensor_nt_line() = default;
 
 
 				    // LABELLING SERVICES
@@ -136,19 +124,22 @@ namespace transport
 				    //! record which indices are active in this group
 				    index_selector<2> active_indices;
 
-            //! compute the dimensionless twopf?
-            bool dimensionless;
-
 			    };
 
 
 		    template <typename number>
-		    tensor_twopf_line<number>::tensor_twopf_line(const twopf_db_task<number>& tk, index_selector<2> sel)
+		    tensor_nt_line<number>::tensor_nt_line(const twopf_db_task<number>& tk, index_selector<2> sel)
 		      : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 		        gadget(tk),
-		        active_indices(sel),
-            dimensionless(true)
+		        active_indices(sel)
 			    {
+			      if(!tk.get_collect_spectral_data())
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_PRODUCT_TENSOR_NT_LINE_NO_SPECTRAL_DATA << ": '" << tk.get_name() << "'";
+                throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
+              }
+
 				    if(active_indices.get_number_fields() != 2)
 					    {
 				        std::ostringstream msg;
@@ -161,17 +152,16 @@ namespace transport
 
 
 		    template <typename number>
-		    tensor_twopf_line<number>::tensor_twopf_line(Json::Value& reader, task_finder<number>& finder)
+		    tensor_nt_line<number>::tensor_nt_line(Json::Value& reader, task_finder<number>& finder)
 			    : derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
             gadget(derived_line<number>::parent_tasks), // safe, will always be constructed after derived_line<number>()
 		        active_indices(reader)
 			    {
-            dimensionless = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_DIMENSIONLESS].asBool();
 			    }
 
 
 		    template <typename number>
-		    std::string tensor_twopf_line<number>::make_LaTeX_label(unsigned int m, unsigned int n) const
+		    std::string tensor_nt_line<number>::make_LaTeX_label(unsigned int m, unsigned int n) const
 			    {
 				    assert(m <= 1);
 				    assert(n <= 1);
@@ -185,6 +175,8 @@ namespace transport
 		        std::ostringstream label;
 		        label << std::setprecision(this->precision);
 
+		        label << CPPTRANSPORT_LATEX_TENSOR_NT_SYMBOL << "(";
+
 		        if(m == 0)      label << CPPTRANSPORT_LATEX_TENSOR_SYMBOL;
 				    else if(m == 1) label << CPPTRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL;
 
@@ -193,12 +185,14 @@ namespace transport
 				    if(n == 0)      label << CPPTRANSPORT_LATEX_TENSOR_SYMBOL;
 				    else if(n == 1) label << CPPTRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL;
 
+				    label << ")";
+
 				    return(label.str());
 			    }
 
 
         template <typename number>
-        std::string tensor_twopf_line<number>::make_non_LaTeX_label(unsigned int m, unsigned int n) const
+        std::string tensor_nt_line<number>::make_non_LaTeX_label(unsigned int m, unsigned int n) const
 	        {
             assert(m <= 1);
             assert(n <= 1);
@@ -212,6 +206,8 @@ namespace transport
             std::ostringstream label;
             label << std::setprecision(this->precision);
 
+            label << CPPTRANSPORT_NONLATEX_TENSOR_NT_SYMBOL << " (";
+
             if(m == 0)      label << CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL;
             else if(m == 1) label << CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL;
 
@@ -220,25 +216,25 @@ namespace transport
             if(n == 0)      label << CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL;
             else if(n == 1) label << CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL;
 
+            label << ")";
+
             return(label.str());
 	        }
 
 
 		    template <typename number>
-		    void tensor_twopf_line<number>::serialize(Json::Value& writer) const
+		    void tensor_nt_line<number>::serialize(Json::Value& writer) const
 			    {
 				    this->active_indices.serialize(writer);
-
-            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
 			    }
 
 
 		    template <typename number>
-		    void tensor_twopf_line<number>::write(std::ostream& out)
+		    void tensor_nt_line<number>::write(std::ostream& out)
 			    {
 		        std::vector<std::string> names = { CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL, CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL };
 
-				    out << " " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TENSOR_TWOPF << '\n';
+				    out << " " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TENSOR_TWOPF_SPECTRAL << '\n';
 		        out << "  " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 		        this->active_indices.write(out, names);
 		        out << '\n';
@@ -247,4 +243,4 @@ namespace transport
 	    }
 	}
 
-#endif //CPPTRANSPORT_TENSOR_TWOPF_LINE_H
+#endif //CPPTRANSPORT_tensor_twopf_spectral_line_H

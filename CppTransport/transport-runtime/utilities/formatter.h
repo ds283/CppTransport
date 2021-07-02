@@ -38,106 +38,112 @@
 #include "boost/lexical_cast.hpp"
 
 
-template <typename IntegerType>
-std::string format_memory(IntegerType size, unsigned int precision=3)
+namespace transport
   {
-    static_assert(std::is_integral<IntegerType>::value, "format_memory requires an integral value type");
 
-    std::ostringstream out;
-
-    constexpr IntegerType gigabyte = 1024*1024*1024;
-    constexpr IntegerType megabyte = 1024*1024;
-    constexpr IntegerType kilobyte = 1024;
-
-    if(size > gigabyte)
+    template <typename IntegerType>
+    std::string format_memory(IntegerType size, unsigned int precision=3)
       {
-        out << std::setprecision(precision) << static_cast<double>(size) / gigabyte << " " << CPPTRANSPORT_GIGABYTE;
-      }
-    else if(size > megabyte)
-      {
-        out << std::setprecision(precision) << static_cast<double>(size) / megabyte << " " << CPPTRANSPORT_MEGABYTE;
-      }
-    else if(size > kilobyte)
-      {
-        out << std::setprecision(precision) << static_cast<double>(size) / kilobyte << " " << CPPTRANSPORT_KILOBYTE;
-      }
-    else
-      {
-        out << size << " " << CPPTRANSPORT_BYTE;
-      }
+        static_assert(std::is_integral<IntegerType>::value, "format_memory requires an integral value type");
 
-    return(out.str());
-  }
+        std::ostringstream out;
 
+        constexpr IntegerType gigabyte = 1024*1024*1024;
+        constexpr IntegerType megabyte = 1024*1024;
+        constexpr IntegerType kilobyte = 1024;
 
-inline std::string format_time(boost::timer::nanosecond_type time, unsigned int precision=3)
-  {
-    std::ostringstream out;
+        if(size > gigabyte)
+          {
+            out << std::setprecision(precision) << static_cast<double>(size) / gigabyte << " " << CPPTRANSPORT_GIGABYTE;
+          }
+        else if(size > megabyte)
+          {
+            out << std::setprecision(precision) << static_cast<double>(size) / megabyte << " " << CPPTRANSPORT_MEGABYTE;
+          }
+        else if(size > kilobyte)
+          {
+            out << std::setprecision(precision) << static_cast<double>(size) / kilobyte << " " << CPPTRANSPORT_KILOBYTE;
+          }
+        else
+          {
+            out << size << " " << CPPTRANSPORT_BYTE;
+          }
 
-    constexpr boost::timer::nanosecond_type mu_sec = 1000;
-    constexpr boost::timer::nanosecond_type m_sec  = 1000*mu_sec;
-    constexpr boost::timer::nanosecond_type sec    = 1000*m_sec;
-    constexpr boost::timer::nanosecond_type minute = 60*sec;
-    constexpr boost::timer::nanosecond_type hour   = 60*minute;
-    constexpr boost::timer::nanosecond_type day    = 24*hour;
-    constexpr boost::timer::nanosecond_type week   = 7*day;
-
-    if(time > week)
-      {
-        out << time/week << CPPTRANSPORT_WEEK << " ";
-        time = time % week;
-      }
-    if(time > day)
-      {
-        out << time/day << CPPTRANSPORT_DAY << " ";
-        time = time % day;
-      }
-    if(time > hour)
-      {
-        out << time/hour << CPPTRANSPORT_HOUR << " ";
-        time = time % hour;
-      }
-    if(time > minute)
-      {
-        out << time/minute << CPPTRANSPORT_MINUTE << " ";
-        time = time % minute;
-      }
-    out << std::setprecision(precision) << static_cast<double>(time) / sec << CPPTRANSPORT_SECOND;
-
-    return(out.str());
-  }
-
-
-inline std::string format_number(double number, unsigned int precision=3)
-  {
-    std::ostringstream out;
-
-    double abs_number = std::abs(number);
-
-    // use scientific notation for large or small numbers, unless
-    // the number is exactly zero
-    if(abs_number != 0.0 && (std::abs(number) > 1E3 || std::abs(number) < 1E-3))
-      {
-        out << std::scientific;
-        if(precision > 0) --precision;    // in scientific format, precision means number of decimal digits
+        return(out.str());
       }
 
-    out << std::setprecision(precision) << number;
 
-    return(out.str());
-  }
+    inline std::string format_time(boost::timer::nanosecond_type time, unsigned int precision=3)
+      {
+        std::ostringstream out;
+
+        constexpr boost::timer::nanosecond_type mu_sec = 1000;
+        constexpr boost::timer::nanosecond_type m_sec  = 1000*mu_sec;
+        constexpr boost::timer::nanosecond_type sec    = 1000*m_sec;
+        constexpr boost::timer::nanosecond_type minute = 60*sec;
+        constexpr boost::timer::nanosecond_type hour   = 60*minute;
+        constexpr boost::timer::nanosecond_type day    = 24*hour;
+        constexpr boost::timer::nanosecond_type week   = 7*day;
+
+        if(time > week)
+          {
+            out << time/week << CPPTRANSPORT_WEEK << " ";
+            time = time % week;
+          }
+        if(time > day)
+          {
+            out << time/day << CPPTRANSPORT_DAY << " ";
+            time = time % day;
+          }
+        if(time > hour)
+          {
+            out << time/hour << CPPTRANSPORT_HOUR << " ";
+            time = time % hour;
+          }
+        if(time > minute)
+          {
+            out << time/minute << CPPTRANSPORT_MINUTE << " ";
+            time = time % minute;
+          }
+        out << std::setprecision(precision) << static_cast<double>(time) / sec << CPPTRANSPORT_SECOND;
+
+        return(out.str());
+      }
 
 
-inline std::string format_version(unsigned int version)
-  {
-    unsigned int major = version / 100;
-    unsigned int minor = version % 100;
+    inline std::string format_number(double number, unsigned int precision=3)
+      {
+        std::ostringstream out;
 
-    std::string major_string = boost::lexical_cast<std::string>(major);
-    std::string minor_string = boost::lexical_cast<std::string>(minor);
+        double abs_number = std::abs(number);
 
-    return(major_string + "." + minor_string);
-  }
+        // use scientific notation for large or small numbers, unless
+        // the number is exactly zero
+        if(abs_number != 0.0 && (std::abs(number) > 1E3 || std::abs(number) < 1E-3))
+          {
+            out << std::scientific;
+            if(precision > 0) --precision;    // in scientific format, precision means number of decimal digits
+          }
+
+        out << std::setprecision(precision) << number;
+
+        return(out.str());
+      }
+
+
+    inline std::string format_version(unsigned int version)
+      {
+        unsigned int major = version / 100;
+        unsigned int minor = version % 100;
+
+        std::string major_string = boost::lexical_cast<std::string>(major);
+        std::string minor_string = boost::lexical_cast<std::string>(minor);
+
+        return(major_string + "." + minor_string);
+      }
+
+  }   // namespace transport
+
 
 
 #endif //CPPTRANSPORT_FORMATTER_H

@@ -279,6 +279,10 @@ namespace transport
             template <typename number>
             void write_zeta_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_line<number>& line, HTML_node& parent);
 
+            //! write details for a zeta twopf spectral index line
+            template <typename number>
+            void write_zeta_twopf_spectral_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_ns_line<number>& line, HTML_node& parent);
+
             //! write details for a zeta threepf line
             template <typename number>
             void write_zeta_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_threepf_line<number>& line, HTML_node& parent);
@@ -290,6 +294,10 @@ namespace transport
             //! write details for a tensor twopf line
             template <typename number>
             void write_tensor_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_line<number>& line, HTML_node& parent);
+
+            //! write details for a tensor twopf spectral index line
+            template <typename number>
+            void write_tensor_nt_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_line<number>& line, HTML_node& parent);
 
             //! write details for an fNL line
             template <typename number>
@@ -338,9 +346,17 @@ namespace transport
             template <typename number>
             void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_time_series<number>& line, HTML_node& parent);
 
+            //! write details for a tensor spectral index time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_time_series<number>& line, HTML_node& parent);
+
             //! write details for a zeta twopf time series line
             template <typename number>
             void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_time_series<number>& line, HTML_node& parent);
+
+            //! write details for a zeta twopf spectral time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_ns_time_series<number>& line, HTML_node& parent);
 
             //! write details for a zeta threepf time series line
             template <typename number>
@@ -362,9 +378,17 @@ namespace transport
             template <typename number>
             void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_wavenumber_series<number>& line, HTML_node& parent);
 
+            //! write details for a tensor spectral index wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_wavenumber_series<number>& line, HTML_node& parent);
+
             //! write details for a zeta twopf wavenumber series line
             template <typename number>
             void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_wavenumber_series<number>& line, HTML_node& parent);
+
+            //! write details for a zeta twopf spectral wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_ns_wavenumber_series<number>& line, HTML_node& parent);
 
             //! write details for a zeta threepf wavenumber series line
             template <typename number>
@@ -2545,154 +2569,182 @@ namespace transport
                           {
                             case derived_data::derived_line_type::background:
                               {
-                                const derived_data::background_time_series<number>& ln = dynamic_cast< derived_data::background_time_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::background_time_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::twopf_time:
                               {
-                                const derived_data::twopf_time_series<number>& ln = dynamic_cast< derived_data::twopf_time_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::twopf_time_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::threepf_time:
                               {
-                                const derived_data::threepf_time_series<number>& ln = dynamic_cast< derived_data::threepf_time_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::threepf_time_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::tensor_twopf_time:
                               {
-                                const derived_data::tensor_twopf_time_series<number>& ln = dynamic_cast< derived_data::tensor_twopf_time_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::tensor_twopf_time_series<number>& >(*line);
+                                this->write_derived_line(bundle, ln, item);
+                                break;
+                              }
+
+                            case derived_data::derived_line_type::tensor_nt_time:
+                              {
+                                const auto& ln = dynamic_cast< derived_data::tensor_nt_time_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::zeta_twopf_time:
                               {
-                                const derived_data::zeta_twopf_time_series<number>& ln = dynamic_cast< derived_data::zeta_twopf_time_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::zeta_twopf_time_series<number>& >(*line);
+                                this->write_derived_line(bundle, ln, item);
+                                break;
+                              }
+
+                            case derived_data::derived_line_type::zeta_ns_time:
+                              {
+                                const auto& ln = dynamic_cast< derived_data::zeta_ns_time_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::zeta_threepf_time:
                               {
-                                const derived_data::zeta_threepf_time_series<number>& ln = dynamic_cast< derived_data::zeta_threepf_time_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::zeta_threepf_time_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::zeta_redbsp_time:
                               {
-                                const derived_data::zeta_reduced_bispectrum_time_series<number>& ln = dynamic_cast< derived_data::zeta_reduced_bispectrum_time_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::zeta_reduced_bispectrum_time_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::twopf_wavenumber:
                               {
-                                const derived_data::twopf_wavenumber_series<number>& ln = dynamic_cast< derived_data::twopf_wavenumber_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::twopf_wavenumber_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::threepf_wavenumber:
                               {
-                                const derived_data::threepf_wavenumber_series<number>& ln = dynamic_cast< derived_data::threepf_wavenumber_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::threepf_wavenumber_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::tensor_twopf_wavenumber:
                               {
-                                const derived_data::tensor_twopf_wavenumber_series<number>& ln = dynamic_cast< derived_data::tensor_twopf_wavenumber_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::tensor_twopf_wavenumber_series<number>& >(*line);
+                                this->write_derived_line(bundle, ln, item);
+                                break;
+                              }
+
+                            case derived_data::derived_line_type::tensor_nt_wavenumber:
+                              {
+                                const auto& ln = dynamic_cast< derived_data::tensor_nt_wavenumber_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::zeta_twopf_wavenumber:
                               {
-                                const derived_data::zeta_twopf_wavenumber_series<number>& ln = dynamic_cast< derived_data::zeta_twopf_wavenumber_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::zeta_twopf_wavenumber_series<number>& >(*line);
+                                this->write_derived_line(bundle, ln, item);
+                                break;
+                              }
+
+                            case derived_data::derived_line_type::zeta_ns_wavenumber:
+                              {
+                                const auto& ln = dynamic_cast< derived_data::zeta_ns_wavenumber_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::zeta_threepf_wavenumber:
                               {
-                                const derived_data::zeta_threepf_wavenumber_series<number>& ln = dynamic_cast< derived_data::zeta_threepf_wavenumber_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::zeta_threepf_wavenumber_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::zeta_redbsp_wavenumber:
                               {
-                                const derived_data::zeta_reduced_bispectrum_wavenumber_series<number>& ln = dynamic_cast< derived_data::zeta_reduced_bispectrum_wavenumber_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::zeta_reduced_bispectrum_wavenumber_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::fNL_time:
                               {
-                                const derived_data::fNL_time_series<number>& ln = dynamic_cast< derived_data::fNL_time_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::fNL_time_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::r_time:
                               {
-                                const derived_data::r_time_series<number>& ln = dynamic_cast< derived_data::r_time_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::r_time_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::r_wavenumber:
                               {
-                                const derived_data::r_wavenumber_series<number>& ln = dynamic_cast< derived_data::r_wavenumber_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::r_wavenumber_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::background_line:
                               {
-                                const derived_data::background_line<number>& ln = dynamic_cast< derived_data::background_line<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::background_line<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::u2:
                               {
-                                const derived_data::u2_line<number>& ln = dynamic_cast< derived_data::u2_line<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::u2_line<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::u3:
                               {
-                                const derived_data::u3_line<number>& ln = dynamic_cast< derived_data::u3_line<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::u3_line<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::largest_u2:
                               {
-                                const derived_data::largest_u2_line<number>& ln = dynamic_cast< derived_data::largest_u2_line<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::largest_u2_line<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::largest_u3:
                               {
-                                const derived_data::largest_u3_line<number>& ln = dynamic_cast< derived_data::largest_u3_line<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::largest_u3_line<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
 
                             case derived_data::derived_line_type::integration_cost:
                               {
-                                const derived_data::cost_wavenumber<number>& ln = dynamic_cast< derived_data::cost_wavenumber<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::cost_wavenumber<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
@@ -2845,6 +2897,13 @@ namespace transport
 
 
         template <typename number>
+        void HTML_report::write_zeta_twopf_spectral_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_ns_line<number>& line, HTML_node& parent)
+          {
+            // not currently used
+          }
+
+
+        template <typename number>
         void HTML_report::write_zeta_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_threepf_line<number>& line, HTML_node& parent)
           {
             HTML_node row("div");
@@ -2912,6 +2971,13 @@ namespace transport
 
             row.add_element(col1).add_element(col2).add_element(col3);
             parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_tensor_nt_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_line<number>& line, HTML_node& parent)
+          {
+            // not currently used
           }
 
 
@@ -3115,12 +3181,36 @@ namespace transport
 
 
         template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("tensor 2-point function spectral index &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_tensor_nt_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
         void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_time_series<number>& line, HTML_node& parent)
           {
             this->derived_line_title("zeta 2-point function &mdash; time data", parent);
 
             this->write_generic_derived_line(bundle, line, parent);
             this->write_zeta_twopf_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_ns_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("zeta 2-point function spectral index &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_zeta_twopf_spectral_line(bundle, line, parent);
             this->write_SQL_query(bundle, line.get_time_query(), parent);
             this->write_SQL_query(bundle, line.get_k_query(), parent);
           }
@@ -3179,10 +3269,36 @@ namespace transport
         template <typename number>
         void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_wavenumber_series<number>& line, HTML_node& parent)
           {
-            this->derived_line_title("3-point function &mdash; momentum-configuration data", parent);
+            this->derived_line_title("tensor 2-point function &mdash; momentum-configuration data", parent);
 
             this->write_generic_derived_line(bundle, line, parent);
             this->write_tensor_twopf_line(bundle, line, parent);
+            this->write_wavenumber_series_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("tensor 2-point function spectral index &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_tensor_nt_line(bundle, line, parent);
+            this->write_wavenumber_series_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_ns_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("zeta 2-point function spectral index &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_zeta_twopf_spectral_line(bundle, line, parent);
             this->write_wavenumber_series_line(bundle, line, parent);
             this->write_SQL_query(bundle, line.get_k_query(), parent);
             this->write_SQL_query(bundle, line.get_time_query(), parent);

@@ -527,6 +527,13 @@ namespace transport
 
 
     template <typename number>
+    zeta_ns_time_data_tag<number> datapipe<number>::new_zeta_ns_time_data_tag(const twopf_kconfig& kdata)
+      {
+        return zeta_ns_time_data_tag<number>(this, kdata);
+      }
+
+
+    template <typename number>
     zeta_threepf_time_data_tag<number> datapipe<number>::new_zeta_threepf_time_data_tag(const threepf_kconfig& kdata)
       {
         return zeta_threepf_time_data_tag<number>(this, kdata);
@@ -544,6 +551,13 @@ namespace transport
     zeta_twopf_kconfig_data_tag<number> datapipe<number>::new_zeta_twopf_kconfig_data_tag(unsigned int tserial)
       {
         return zeta_twopf_kconfig_data_tag<number>(this, tserial);
+      }
+
+
+    template <typename number>
+    zeta_ns_kconfig_data_tag<number> datapipe<number>::new_zeta_ns_kconfig_data_tag(unsigned int tserial)
+      {
+        return zeta_ns_kconfig_data_tag<number>(this, tserial);
       }
 
 

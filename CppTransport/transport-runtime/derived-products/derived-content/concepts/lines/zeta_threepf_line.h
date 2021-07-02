@@ -53,17 +53,17 @@
 #include "transport-runtime/derived-products/utilities/wrapper.h"
 
 
-#define CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_ROOT          "zeta-threepf-line-settings"
-#define CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_DIMENSIONLESS "dimensionless"
-
-
 namespace transport
 	{
 
 		namespace derived_data
 			{
 
-				//! general zeta threepf content producer, suitable for producing
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_ROOT          = "zeta-threepf-line-settings";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_DIMENSIONLESS = "dimensionless";
+
+
+        //! general zeta threepf content producer, suitable for producing
 				//! content usable in eg. a 2d plot or table.
 				//! Note that we derive virtuall from derived_line<> to solve the diamond
 				//! problem -- concrete classes may inherit several derived_line<> attributes,
@@ -77,10 +77,10 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    zeta_threepf_line(const zeta_threepf_task<number>& tk);
+				    explicit zeta_threepf_line(const zeta_threepf_task<number>& tk);
 
 				    //! Deserialization constructor
-				    zeta_threepf_line(Json::Value& reader);
+				    explicit zeta_threepf_line(Json::Value& reader);
 
 				    virtual ~zeta_threepf_line() = default;
 
@@ -124,10 +124,10 @@ namespace transport
           public:
 
 		        //! make a LaTeX label for one of our lines
-		        std::string make_LaTeX_label(void) const;
+		        std::string make_LaTeX_label() const;
 
 		        //! make a non-LaTeX label for one of our lines
-		        std::string make_non_LaTeX_label(void) const;
+		        std::string make_non_LaTeX_label() const;
 
 
 		        // WRITE TO A STREAM
@@ -135,7 +135,7 @@ namespace transport
 		      public:
 
 		        //! write self-details to a stream
-		        virtual void write(std::ostream& out) override;
+		        void write(std::ostream& out) override;
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
@@ -143,7 +143,7 @@ namespace transport
 		      public:
 
 		        //! Serialize this object
-		        virtual void serialize(Json::Value& writer) const override;
+		        void serialize(Json::Value& writer) const override;
 
 
 		        // INTERNAL DATA
@@ -189,7 +189,7 @@ namespace transport
 
 
 				template <typename number>
-				std::string zeta_threepf_line<number>::make_LaTeX_label(void) const
+				std::string zeta_threepf_line<number>::make_LaTeX_label() const
 					{
             std::ostringstream label;
             if(this->dimensionless) label << CPPTRANSPORT_LATEX_SHAPE_FACTOR << " ";
@@ -200,7 +200,7 @@ namespace transport
 
 
 				template <typename number>
-				std::string zeta_threepf_line<number>::make_non_LaTeX_label(void) const
+				std::string zeta_threepf_line<number>::make_non_LaTeX_label() const
 					{
             std::ostringstream label;
             if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_SHAPE_FACTOR << " ";

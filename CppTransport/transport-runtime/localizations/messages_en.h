@@ -94,6 +94,8 @@
 #include "transport-runtime/localizations/messages_en/derived-products/time_series_convenience.h"
 #include "transport-runtime/localizations/messages_en/derived-products/wavenumber_series_convenience.h"
 #include "transport-runtime/localizations/messages_en/derived-products/fNL_line.h"
+#include "transport-runtime/localizations/messages_en/derived-products/zeta_twopf_spectral_line.h"
+#include "transport-runtime/localizations/messages_en/derived-products/tensor_twopf_spectral_line.h"
 #include "transport-runtime/localizations/messages_en/derived-products/line_values.h"
 #include "transport-runtime/localizations/messages_en/derived-products/SQL_query.h"
 
