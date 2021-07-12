@@ -150,8 +150,6 @@ namespace transport
 					  using task_set_type = typename derivable_task_set<number>::type;
             using task_set_element_type = typename derivable_task_set<number>::type::value_type;
 
-					  using owning_task_initializer_list_type = std::initializer_list<task_set_element_type>;
-
 
 						// CONSTRUCTOR, DESTRUCTOR
 
@@ -161,7 +159,15 @@ namespace transport
 						derived_line(task_set_element_type tk, axis_class at,
                          std::set<axis_value> sax, unsigned int prec=CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
-						derived_line(owning_task_initializer_list_type tks, axis_class at, std::set<axis_value> sax,
+						//! Accept two parent tasks
+						// TODO: would be preferable to accept an std::initializer_list<> or even a task_set_type, which could
+						//  be moved into our own task set.
+						//  However, this doesn't seem possible. std::initializer_list<> does not allow elements to be moved out
+						//  of it, so whether we use it directly or try to brace-initializer task_set_type when this constructor
+						//  is called and then move that, we have to be able to copy the task_set_element_type objects
+						//  it contains ... and that's not possible, because they contain std::unique_ptr<>.
+						//  Should keep an eye on future changes to the C++ standard to allow moves out of std::initializer_list<>
+						derived_line(task_set_element_type tk1, task_set_element_type tk2, axis_class at, std::set<axis_value> sax,
                          unsigned int prec=CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! Dummy constructor, should not be used.
@@ -419,7 +425,8 @@ namespace transport
 
 
         template <typename number>
-        derived_line<number>::derived_line(typename derived_line<number>::owning_task_initializer_list_type tks,
+        derived_line<number>::derived_line(typename derived_line<number>::task_set_element_type tk1,
+                                           typename derived_line<number>::task_set_element_type tk2,
                                            axis_class at, std::set<axis_value> sax, unsigned int prec)
           :  x_class(at),
              supported_x_axes(std::move(sax)),
@@ -430,10 +437,8 @@ namespace transport
              precision(prec)
           {
             parent_tasks.clear();
-            for(auto& item : tks)
-              {
-                parent_tasks.insert(std::move(tks));
-              }
+            parent_tasks.insert(std::move(tk1));
+            parent_tasks.insert(std::move(tk2));
 
             // check that at least one supportable x-axis type has been specified
             if(supported_x_axes.empty())

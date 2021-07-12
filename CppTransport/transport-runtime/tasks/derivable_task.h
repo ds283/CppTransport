@@ -179,9 +179,10 @@ namespace transport
     typename derivable_task_set<number>::type::value_type
     make_derivable_task_set_element(const derivable_task<number>& tk, bool i, bool s, bool sd, unsigned int id=0)
       {
-        return {id, std::move(derivable_task_set_element<number>{
-          std::unique_ptr<derivable_task<number> >(dynamic_cast< derivable_task<number>* >(tk.clone())),
-          std::make_unique<content_group_specifier>(i, s, sd), id})};
+        return {id,
+                std::move(derivable_task_set_element<number>{
+                  std::unique_ptr<derivable_task<number> >(dynamic_cast< derivable_task<number>* >(tk.clone())),
+                  std::make_unique<content_group_specifier>(i, s, sd), id})};
       }
 
 
