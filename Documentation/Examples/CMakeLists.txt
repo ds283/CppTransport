@@ -1,7 +1,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(dquad)
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "~/.cpptransport202101/share/cmake/")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/Users/ds283/.cpptransport202101/share/cmake/")
+SET(CPPTRANSPORT_BIN_PATH "/Users/ds283/.cpptransport202101/bin")
+SET(CPPTRANSPORT_RESOURCE_PATH "/Users/ds283/.cpptransport202101/share/cpptransport")
 
 INCLUDE(CompilerFlags)
 
@@ -13,7 +15,7 @@ INCLUDE_DIRECTORIES(${CPPTRANSPORT_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 
 ADD_CUSTOM_COMMAND(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dquad_core.h ${CMAKE_CURRENT_BINARY_DIR}/dquad_mpi.h
-  COMMAND CppTransport --verbose --fast ${CMAKE_CURRENT_SOURCE_DIR}/dquad.model
+  COMMAND ${CPPTRANSPORT_BIN_PATH}/CppTransport -I ${CPPTRANSPORT_RESOURCE_PATH} --verbose --fast ${CMAKE_CURRENT_SOURCE_DIR}/dquad.model
   DEPENDS dquad.model
 )
 
