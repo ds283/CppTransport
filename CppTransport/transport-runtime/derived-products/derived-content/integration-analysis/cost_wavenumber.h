@@ -330,8 +330,11 @@ namespace transport
                   }
               }
 
+            // TODO: should be moved to *_factory system for emplacing data lines
             data_line<number> line(group, this->x_type, this_value, w_axis, line_data,
-                                   this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages, this->is_spectral_index());
+                                   this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages,
+                                   this->is_spectral_index() ? data_storage_type::spectral_index
+                                                             : data_storage_type::raw);
             line.set_data_line_type(data_line_type::scattered_data);
             lines.push_back(line);
 

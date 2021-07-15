@@ -232,8 +232,9 @@ namespace transport
                                 value = value_type::correlation_function;
                               }
 
-                            lines.emplace_back(group, this->x_type, value, w_axis, line_data,
-                                               this->get_LaTeX_label(m,n,t_value.t), this->get_non_LaTeX_label(m,n,t_value.t), messages, this->is_spectral_index());
+                            wavenumber_data_line_factory(*this, lines, group, this->x_type, value, w_axis, line_data,
+                                                         this->get_LaTeX_label(m, n, t_value.t),
+                                                         this->get_non_LaTeX_label(m, n, t_value.t), messages);
 									        }
 							        }
 					        }
@@ -472,8 +473,9 @@ namespace transport
                             std::vector<number> line_data = k_handle.lookup_tag(tag);
                             assert(line_data.size() == k_values.size());
 
-                            lines.emplace_back(group, this->x_type, value_type::spectral_index, w_axis, line_data,
-                                               this->get_LaTeX_label(m,n,t_value.t), this->get_non_LaTeX_label(m,n,t_value.t), messages, true);
+                            wavenumber_data_line_factory(*this, lines, group, this->x_type, value_type::spectral_index,
+                                                         w_axis, line_data, this->get_LaTeX_label(m, n, t_value.t),
+                                                         this->get_non_LaTeX_label(m, n, t_value.t), messages);
                           }
                       }
                   }

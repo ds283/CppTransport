@@ -253,8 +253,9 @@ namespace transport
                                 line_data[j] = u2_tensor[mdl->flatten(m,n)];
                               }
 
-                            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
-                                               this->get_LaTeX_label(m,n,k_config), this->get_non_LaTeX_label(m,n,k_config), messages);
+                            time_data_line_factory(*this, lines, group, this->x_type, value_type::dimensionless, t_axis,
+                                                   line_data, this->get_LaTeX_label(m,n,k_config),
+                                                   this->get_non_LaTeX_label(m,n,k_config), messages);
                           }
                       }
                   }

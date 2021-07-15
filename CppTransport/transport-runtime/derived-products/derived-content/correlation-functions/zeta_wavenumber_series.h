@@ -224,8 +224,9 @@ namespace transport
                     value = value_type::correlation_function;
                   }
 
-                lines.emplace_back(group, this->x_type, value, w_axis, line_data,
-                this->get_LaTeX_label(t_value.t), this->get_non_LaTeX_label(t_value.t), messages, this->is_spectral_index());
+                wavenumber_data_line_factory(*this, lines, group, this->x_type, value, w_axis, line_data,
+                                             this->get_LaTeX_label(t_value.t), this->get_non_LaTeX_label(t_value.t),
+                                             messages);
               }
 
             // detach pipe from content group
@@ -450,8 +451,9 @@ namespace transport
                 std::vector<number> line_data = z_handle.lookup_tag(tag);
                 assert(line_data.size() == k_values.size());
 
-                lines.emplace_back(group, this->x_type, value_type::correlation_function, w_axis, line_data,
-                                   this->get_LaTeX_label(t_value.t), this->get_non_LaTeX_label(t_value.t), messages, true);
+                wavenumber_data_line_factory(*this, lines, group, this->x_type, value_type::correlation_function,
+                                             w_axis, line_data, this->get_LaTeX_label(t_value.t),
+                                             this->get_non_LaTeX_label(t_value.t), messages);
 			        }
 
 		        // detach pipe from content group
@@ -697,8 +699,9 @@ namespace transport
                     value = value_type::correlation_function;
                   }
 
-                lines.emplace_back(group, this->x_type, value, w_axis, line_data,
-                                   this->get_LaTeX_label(t_value.t), this->get_non_LaTeX_label(t_value.t), messages, this->is_spectral_index());
+                wavenumber_data_line_factory(*this, lines, group, this->x_type, value, w_axis, line_data,
+                                             this->get_LaTeX_label(t_value.t), this->get_non_LaTeX_label(t_value.t),
+                                             messages);
 			        }
 
 		        // detach pipe from content group
@@ -921,8 +924,9 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-                lines.emplace_back(group, this->x_type, value_type::fNL, w_axis, line_data,
-                                   this->get_LaTeX_label(t_value.t), this->get_non_LaTeX_label(t_value.t), messages, this->is_spectral_index());
+                wavenumber_data_line_factory(*this, lines, group, this->x_type, value_type::fNL, w_axis, line_data,
+                                             this->get_LaTeX_label(t_value.t), this->get_non_LaTeX_label(t_value.t),
+                                             messages);
 			        }
 
 		        // detach pipe from content group

@@ -374,10 +374,8 @@ namespace transport
 				        line_data[j] = mdl->epsilon(this->gadget.get_twopf_db_task()->get_params(), bg_data[j]);
 					    }
 
-            data_line_set<number> lines;
-            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
-                               this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
-				    return lines;
+            return time_data_line_factory(*this, group, this->x_type, value_type::dimensionless, t_axis, line_data,
+                                          this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 
 
@@ -396,10 +394,8 @@ namespace transport
                 line_data[j] = mdl->eta(this->gadget.get_twopf_db_task()->get_params(), bg_data[j]);
               }
 
-            data_line_set<number> lines;
-            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
-                               this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
-            return lines;
+            return time_data_line_factory(*this, group, this->x_type, value_type::dimensionless, t_axis, line_data,
+                                          this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
           }
 
 
@@ -418,10 +414,8 @@ namespace transport
                 line_data[j] = mdl->H(this->gadget.get_twopf_db_task()->get_params(), bg_data[j]);
               }
 
-            data_line_set<number> lines;
-            lines.emplace_back(group, this->x_type, value_type::mass, t_axis, line_data,
-                               this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
-            return lines;
+            return time_data_line_factory(*this, group, this->x_type, value_type::mass, t_axis, line_data,
+                                          this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
           }
 
 
@@ -443,10 +437,8 @@ namespace transport
 		            line_data[j] = a * mdl->H(this->gadget.get_twopf_db_task()->get_params(), bg_data[j]);
 			        }
 
-            data_line_set<number> lines;
-            lines.emplace_back(group, this->x_type, value_type::mass, t_axis, line_data,
-                               this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
-            return lines;
+            return time_data_line_factory(*this, group, this->x_type, value_type::mass, t_axis, line_data,
+                                          this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 
 
@@ -514,8 +506,9 @@ namespace transport
                 std::ostringstream text_label;
                 text_label << CPPTRANSPORT_MASS_SPECTRUM_SYMBOL << "{" << j+2 << "}";
 
-                lines.emplace_back(group, this->x_type, norm ? value_type::dimensionless : value_type::mass,
-                                   t_axis, line_data[j], latex_label.str(), text_label.str(), messages);
+                time_data_line_factory(*this, lines, group, this->x_type,
+                                       norm ? value_type::dimensionless : value_type::mass, t_axis, line_data[j],
+                                       latex_label.str(), text_label.str(), messages);
               }
 
             return lines;

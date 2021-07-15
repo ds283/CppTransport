@@ -215,8 +215,8 @@ namespace transport
                     value = value_type::correlation_function;
                   }
 
-                lines.emplace_back(group, this->x_type, value, t_axis, line_data,
-                                   this->get_LaTeX_label(k_value), this->get_non_LaTeX_label(k_value), messages);
+                time_data_line_factory(*this, lines, group, this->x_type, value, t_axis, line_data,
+                                       this->get_LaTeX_label(k_value), this->get_non_LaTeX_label(k_value), messages);
               }
 
             // detach pipe from content group
@@ -437,8 +437,8 @@ namespace transport
 
                 std::vector<number> line_data = z_handle.lookup_tag(tag);
 
-                lines.emplace_back(group, this->x_type, value_type::spectral_index, t_axis, line_data,
-                                   this->get_LaTeX_label(k_value), this->get_non_LaTeX_label(k_value), messages, true);
+                time_data_line_factory(*this, lines, group, this->x_type, value_type::spectral_index, t_axis, line_data,
+                                       this->get_LaTeX_label(k_value), this->get_non_LaTeX_label(k_value), messages);
               }
 
             // detach pipe from content group
@@ -674,8 +674,8 @@ namespace transport
                     value = value_type::correlation_function;
                   }
 
-                lines.emplace_back(group, this->x_type, value, t_axis, line_data,
-                                   this->get_LaTeX_label(k_value), this->get_non_LaTeX_label(k_value), messages);
+                time_data_line_factory(*this, lines, group, this->x_type, value, t_axis, line_data,
+                                       this->get_LaTeX_label(k_value), this->get_non_LaTeX_label(k_value), messages);
               }
 
             // detach pipe from content group
@@ -894,8 +894,8 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-                lines.emplace_back(group, this->x_type, value_type::fNL, t_axis, line_data,
-                                   this->get_LaTeX_label(k_value), this->get_non_LaTeX_label(k_value), messages);
+                time_data_line_factory(*this, lines, group, this->x_type, value_type::fNL, t_axis, line_data,
+                                       this->get_LaTeX_label(k_value), this->get_non_LaTeX_label(k_value), messages);
               }
 
             // detach pipe from content group

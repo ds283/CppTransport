@@ -129,6 +129,9 @@ namespace transport
     constexpr auto CPPTRANSPORT_LATEX_TENSOR_NT_SYMBOL                   = "n_t";
     constexpr auto CPPTRANSPORT_NONLATEX_TENSOR_NT_SYMBOL                = "n_t";
 
+    constexpr auto CPPTRANSPORT_LATEX_SPECTRAL_INDEX                     = "(spectral index)";
+    constexpr auto CPPTRANSPORT_NONLATEX_SPECTRAL_INDEX                  = "(spectral index)";
+
     constexpr auto CPPTRANSPORT_LATEX_SHAPE_FACTOR                       = "(k_1 k_2 k_3)^2";
     constexpr auto CPPTRANSPORT_NONLATEX_SHAPE_FACTOR                    = "(k_1 k_2 k_3)^2";
 

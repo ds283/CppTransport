@@ -239,8 +239,8 @@ namespace transport
 				            line_data[j] = 4.0 * tensor_data[j] / zeta_data[k_value.serial][j];
 					        }
 
-				        lines.emplace_back(groups, this->x_type, value_type::r, t_axis, line_data,
-                                   this->get_LaTeX_label(k_value), this->get_non_LaTeX_label(k_value), messages);
+				        time_data_line_factory(*this, lines, groups, this->x_type, value_type::r, t_axis, line_data,
+                                       this->get_LaTeX_label(k_value), this->get_non_LaTeX_label(k_value), messages);
 					    }
 
 				    // detach pipe from content group

@@ -227,8 +227,9 @@ namespace transport
                                 value = value_type::correlation_function;
                               }
 
-                            lines.emplace_back(group, this->x_type, value, t_axis, line_data,
-                                               this->get_LaTeX_label(m,n,k_value), this->get_non_LaTeX_label(m,n,k_value), messages);
+                            time_data_line_factory(*this, lines, group, this->x_type, value, t_axis, line_data,
+                                                   this->get_LaTeX_label(m, n, k_value),
+                                                   this->get_non_LaTeX_label(m, n, k_value), messages);
 									        }
 							        }
 					        }
@@ -465,8 +466,9 @@ namespace transport
 
                             std::vector<number> line_data = t_handle.lookup_tag(tag);
 
-                            lines.emplace_back(group, this->x_type, value_type::spectral_index, t_axis, line_data,
-                                               this->get_LaTeX_label(m,n,k_value), this->get_non_LaTeX_label(m,n,k_value), messages, true);
+                            time_data_line_factory(*this, lines, group, this->x_type, value_type::spectral_index, t_axis,
+                                                   line_data, this->get_LaTeX_label(m, n, k_value),
+                                                   this->get_non_LaTeX_label(m, n, k_value), messages);
                           }
                       }
                   }

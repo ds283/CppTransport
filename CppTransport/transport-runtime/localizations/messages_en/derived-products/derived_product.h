@@ -28,28 +28,40 @@
 #define CPPTRANSPORT_MESSAGES_EN_DERIVED_PRODUCT_H
 
 
-#define CPPTRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH  "Axis and sample size mismatch in 'time_data_line'"
+namespace transport
+  {
 
-#define CPPTRANSPORT_PRODUCT_UNKNOWN_TYPE            "Unknown derived-product type"
+    namespace derived_data
+      {
 
-#define CPPTRANSPORT_INDEX_UNKNOWN_RANGE_TYPE        "Unknown 'index_selector' range type"
-#define CPPTRANSPORT_INDEX_PRESET_MISMATCH           "Mismatched number of presets provided to 'index_selector'; expected"
-#define CPPTRANSPORT_INDEX_PRESET_MISMATCH_A         "received"
+        constexpr auto CPPTRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH    = "Axis and sample size mismatch in data_line<>";
+        constexpr auto CPPTRANSPORT_PRODUCT_DATALINE_UNEXPECTED_STORE = "Unexpected data store type in data_line<>";
 
-#define CPPTRANSPORT_PRODUCT_INDEX_MISMATCH          "Unexpected number of fields in index selector object"
-#define CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_A        "received"
-#define CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_B        "expected"
+        constexpr auto CPPTRANSPORT_PRODUCT_UNKNOWN_TYPE              = "Unknown derived-product type";
 
-#define CPPTRANSPORT_PRODUCT_INDEX_BOUNDS            "Out-of-bounds index value"
+        constexpr auto CPPTRANSPORT_INDEX_UNKNOWN_RANGE_TYPE          = "Unknown 'index_selector' range type";
+        constexpr auto CPPTRANSPORT_INDEX_PRESET_MISMATCH             = "Mismatched number of presets provided to 'index_selector'; expected";
+        constexpr auto CPPTRANSPORT_INDEX_PRESET_MISMATCH_A           = "received";
 
-#define CPPTRANSPORT_DERIVED_PRODUCT_FAILED          "Error: I/O error; failed to generate derived product"
+        constexpr auto CPPTRANSPORT_PRODUCT_INDEX_MISMATCH            = "Unexpected number of fields in index selector object";
+        constexpr auto CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_A          = "received";
+        constexpr auto CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_B          = "expected";
 
-#define CPPTRANSPORT_DERIVED_PRODUCT_FILENAME        "Filename"
+        constexpr auto CPPTRANSPORT_PRODUCT_INDEX_BOUNDS              = "Out-of-bounds index value";
 
-#define CPPTRANSPORT_DERIVED_PRODUCT_LINE_2D_PLOT    "2d plot"
-#define CPPTRANSPORT_DERIVED_PRODUCT_LINE_TABLE      "table"
+        constexpr auto CPPTRANSPORT_DERIVED_PRODUCT_FAILED            = "Error: I/O error; failed to generate derived product";
 
-#define CPPTRANSPORT_PRODUCT_CANT_BUILD_SPLINE_A     "Could not build successful spline for line with label"
-#define CPPTRANSPORT_PRODUCT_CANT_BUILD_SPLINE_B     "(plot shows original line)"
+        constexpr auto CPPTRANSPORT_DERIVED_PRODUCT_FILENAME          = "Filename";
+
+        constexpr auto CPPTRANSPORT_DERIVED_PRODUCT_LINE_2D_PLOT      = "2d plot";
+        constexpr auto CPPTRANSPORT_DERIVED_PRODUCT_LINE_TABLE        = "table";
+
+        constexpr auto CPPTRANSPORT_PRODUCT_CANT_BUILD_SPLINE_A       = "Could not build successful spline for line with label";
+        constexpr auto CPPTRANSPORT_PRODUCT_CANT_BUILD_SPLINE_B       = "(plot shows original line)";
+
+      }   // namespace derived_data
+
+  }   // namespace transport
+
 
 #endif // CPPTRANSPORT_MESSAGES_EN_DERIVED_PRODUCT_H

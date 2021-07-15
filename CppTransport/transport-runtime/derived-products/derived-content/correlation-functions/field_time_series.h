@@ -229,11 +229,11 @@ namespace transport
                     // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
 
-                    lines.emplace_back(group, this->x_type,
-                                       this->gadget.get_model()->is_field(m) ? value_type::field
-                                                                             : value_type::momentum, t_axis,
-                                       line_data,
-                                       this->make_LaTeX_label(m), this->make_non_LaTeX_label(m), messages);
+                    time_data_line_factory(*this, lines, group, this->x_type,
+                                           this->gadget.get_model()->is_field(m) ? value_type::field
+                                                                                 : value_type::momentum, t_axis,
+                                           line_data,
+                                           this->make_LaTeX_label(m), this->make_non_LaTeX_label(m), messages);
                   }
               }
 
@@ -480,8 +480,9 @@ namespace transport
                                 value = value_type::correlation_function;
                               }
 
-                            lines.emplace_back(group, this->x_type, value, t_axis, line_data,
-                                               this->get_LaTeX_label(m, n, k_value), this->get_non_LaTeX_label(m, n, k_value), messages);
+                            time_data_line_factory(*this, lines, group, this->x_type, value, t_axis, line_data,
+                                                   this->get_LaTeX_label(m, n, k_value),
+                                                   this->get_non_LaTeX_label(m, n, k_value), messages);
 			                    }
 			                }
 			            }
@@ -736,8 +737,9 @@ namespace transport
                                     value = value_type::correlation_function;
                                   }
 
-                                lines.emplace_back(group, this->x_type, value, t_axis, line_data,
-                                                   this->get_LaTeX_label(l, m, n, k_value), this->get_non_LaTeX_label(l, m, n, k_value), messages);
+                                time_data_line_factory(*this, lines, group, this->x_type, value, t_axis, line_data,
+                                                       this->get_LaTeX_label(l, m, n, k_value),
+                                                       this->get_non_LaTeX_label(l, m, n, k_value), messages);
 			                        }
 			                    }
 			                }

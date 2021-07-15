@@ -182,8 +182,8 @@ namespace transport
 		        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
             const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-            data_line_set<number> lines;
-            lines.emplace_back(group, this->x_type, value_type::fNL, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
+            auto lines = time_data_line_factory(*this, group, this->x_type, value_type::fNL, t_axis, line_data,
+                                                this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 
             // detach pipe from content group
             this->detach(pipe);
