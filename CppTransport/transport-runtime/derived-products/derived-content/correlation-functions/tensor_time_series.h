@@ -94,8 +94,8 @@ namespace transport
 		      public:
 
 		        //! generate data lines for plotting
-		        void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                              const tag_list& tags, slave_message_buffer& messages) const override;
+		        data_line_set<number> derive_lines
+		          (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 		        //! generate a LaTeX label
 		        std::string get_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const;
@@ -172,8 +172,8 @@ namespace transport
 
 
         template <typename number>
-        void tensor_twopf_time_series<number>::derive_lines
-          (datapipe<number>& pipe, std::list<data_line<number> >& lines, const tag_list& tags, slave_message_buffer& messages) const
+        data_line_set<number> tensor_twopf_time_series<number>::derive_lines
+          (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 	        {
             // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
@@ -189,6 +189,8 @@ namespace transport
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
 
 		        const typename std::vector< twopf_kconfig > k_values = k_handle.lookup_tag(k_tag);
+
+		        data_line_set<number> lines;
 
 		        // for each k-configuration, loop through all components of the tensor twopf and pull data from the database
 		        for(const auto& k_value : k_values)
@@ -234,6 +236,7 @@ namespace transport
 
             // detach pipe from content group
             this->detach(pipe);
+		        return lines;
 	        }
 
 
@@ -348,8 +351,8 @@ namespace transport
           public:
 
             //! generate data lines for plotting
-            void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                                      const tag_list& tags, slave_message_buffer& messages) const override;
+            data_line_set<number> derive_lines
+              (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
             //! generate a LaTeX label
             std::string get_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const;
@@ -426,8 +429,8 @@ namespace transport
 
 
         template <typename number>
-        void tensor_nt_time_series<number>::derive_lines
-          (datapipe<number>& pipe, std::list<data_line<number> >& lines, const tag_list& tags, slave_message_buffer& messages) const
+        data_line_set<number> tensor_nt_time_series<number>::derive_lines
+          (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
           {
             // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
@@ -443,6 +446,8 @@ namespace transport
             twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
 
             const typename std::vector< twopf_kconfig > k_values = k_handle.lookup_tag(k_tag);
+
+            data_line_set<number> lines;
 
             // for each k-configuration, loop through all components of the tensor twopf and pull data from the database
             for(const auto& k_value : k_values)
@@ -469,6 +474,7 @@ namespace transport
 
             // detach pipe from content group
             this->detach(pipe);
+            return lines;
           }
 
 

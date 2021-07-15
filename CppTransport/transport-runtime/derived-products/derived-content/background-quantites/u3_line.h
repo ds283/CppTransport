@@ -97,8 +97,8 @@ namespace transport
 		      public:
 
 				    //! generate data lines for plotting
-				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                      const tag_list& tags, slave_message_buffer& messages) const override;
+				    data_line_set<number> derive_lines
+				      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 		      protected:
 
@@ -236,8 +236,8 @@ namespace transport
 
 
 				template <typename number>
-				void u3_line<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                           const tag_list& tags, slave_message_buffer& messages) const
+				data_line_set<number> u3_line<number>::derive_lines
+				  (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 					{
 				    // attach our datapipe to a content group
 				    std::string group = this->attach(pipe, tags);
@@ -279,7 +279,9 @@ namespace transport
 
             std::vector<number> u3_tensor(2*Nfields * 2*Nfields * 2*Nfields);
 
-            for(auto & k_config : k_configs)
+            data_line_set<number> lines;
+
+            for(const auto& k_config : k_configs)
               {
                 for(unsigned int l = 0; l < 2*Nfields; ++l)
                   {
@@ -307,6 +309,7 @@ namespace transport
               }
 
             this->detach(pipe);
+            return lines;
 			    }
 
 

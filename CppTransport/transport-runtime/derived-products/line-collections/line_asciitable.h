@@ -75,7 +75,9 @@ namespace transport
 
 		      public:
 
-				    //! Basic user-facing constructor
+				    //! Basic user-facing constructor takes name, output filename, table format specifier
+				    //! and optional precision.
+				    //! Table format is also deduced from the output filename extension if needed.
 				    line_asciitable(const std::string& name, const boost::filesystem::path& filename,
                             table_format f=table_format::justified,
                             unsigned int prec=CPPTRANSPORT_DEFAULT_TABLE_PRECISION)
@@ -103,6 +105,7 @@ namespace transport
 				    //! Deserialization constructor
 				    line_asciitable(const std::string& name, Json::Value& reader, task_finder<number> finder);
 
+				    //! Destructor can be default
 				    virtual ~line_asciitable() = default;
 
 
@@ -127,10 +130,10 @@ namespace transport
               }
 
             //! overload += to do the same thing
-            virtual line_asciitable<number>& operator+=(const derived_line<number>& line) override { return this->add_line(line); }
+            line_asciitable<number>& operator+=(const derived_line<number>& line) override { return this->add_line(line); }
 
             //! add a vector of derived lines (eg. produced by operator+ overload between derived lines)
-            virtual line_asciitable<number>& operator+=(const std::vector< std::shared_ptr< derived_line<number> > > list) override
+            line_asciitable<number>& operator+=(const std::vector< std::shared_ptr< derived_line<number> > > list) override
               {
                 this->line_collection<number>::operator+=(list);
                 this->apply_default_labels(!this->x_label_set);
@@ -150,8 +153,7 @@ namespace transport
 		      protected:
 
 				    //! Make table
-            void make_table(datapipe<number>& pipe, const std::deque<double>& axis,
-                            const typename std::vector<typename line_collection<number>::output_line>& data,
+            void make_table(datapipe<number>& pipe, const typename line_collection<number>::merged_line_set& data,
                             local_environment& env, argument_cache& args) const;
 
 
@@ -255,20 +257,20 @@ namespace transport
 					{
             slave_message_context ctx(messages, this->name);
 
-            // generate output from our constituent lines
-				    std::list< data_line<number> > derived_lines;
-						this->obtain_output(pipe, tags, derived_lines, messages);
+            // generate output from our constituent lines, writing any errors messages into the
+            // slave message buffer
+						auto data_lines = this->obtain_output(pipe, tags, messages);
 
-						// merge this output onto a single axis
-				    std::deque<double> axis;
-						typename std::vector< typename line_collection<number>::output_line > output_lines;
-						this->merge_lines(pipe, derived_lines, axis, output_lines);
+						// merge these data lines into a merged_line_set: that consists of a single merged x-axis,
+						// plus output_line versions of each data line that contain "mask" values if/where there are missing
+						// x sample data points
+            auto merged_lines = this->merge_lines(pipe, data_lines);
 
-						// make table
-						this->make_table(pipe, axis, output_lines, env, args);
+						// make table using the merged line set
+						this->make_table(pipe, merged_lines, env, args);
 
             // get content groups which were used
-            content_group_name_set used_groups = this->extract_content_groups(derived_lines);
+            content_group_name_set used_groups = this->extract_content_groups(data_lines);
 
 						// commit product
 						pipe.commit(this, used_groups);
@@ -278,8 +280,8 @@ namespace transport
 
 
 				template <typename number>
-        void line_asciitable<number>::make_table(datapipe<number>& pipe, const std::deque<double>& axis,
-                                                 const typename std::vector<typename line_collection<number>::output_line>& data,
+        void line_asciitable<number>::make_table(datapipe<number>& pipe,
+                                                 const typename line_collection<number>::merged_line_set& data,
                                                  local_environment& env, argument_cache& args) const
 					{
 						// extract paths from the datapipe
@@ -291,6 +293,9 @@ namespace transport
 				    std::ofstream out;
 						out.open(table_file.string().c_str(), std::ios_base::trunc | std::ios_base::out);
 
+            const auto& axis = data.first;
+            const auto& lines = data.second;
+
 						if(out.is_open())
 							{
 						    asciitable writer(out, env, args);
@@ -299,7 +304,8 @@ namespace transport
 
 								// copy labels into vector of labels
 						    std::vector<std::string> labels;
-						    for(const typename line_collection<number>::output_line& line : data)
+						    labels.reserve(lines.size());
+						    for(const auto& line : lines)
 							    {
 								    labels.push_back(line.get_label());
 							    }
@@ -310,24 +316,24 @@ namespace transport
 
 								// copy values into array ys
                 // the entries in ys are stored columnwise, ie. first index is column, second index is row
-						    std::vector< std::vector<number> > ys(labels.size());
-
-								for(unsigned int j = 0; j < ys.size(); ++j)
+						    std::vector< std::vector<double> > ys(lines.size());
+								for(auto& y : ys)
 									{
-										ys[j].resize(x.size());
+										y.resize(x.size());
 									}
 
-								for(unsigned int i = 0; i < data.size(); ++i)
-									{
-								    const typename std::deque< typename line_collection<number>::output_value >& values = data[i].get_values();
+                unsigned int i = 0;
+								for(const auto& line : lines)
+                  {
+                    const auto& values = line.get_values();
+                    assert(values.size() == x.size());
 
-										assert(values.size() == x.size());
-
-										for(unsigned int j = 0; j < values.size(); ++j)
-											{
-												ys[i][j] = values[j].format_number();
-											}
-									}
+                    for(unsigned int j = 0; j < values.size(); ++j)
+                      {
+                        ys[i][j] = values[j].format_number();
+                      }
+                    ++i;
+                  }
 
                 switch(this->format)
                   {

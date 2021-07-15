@@ -94,8 +94,8 @@ namespace transport
 		      public:
 
 				    //! generate data lines for plotting
-				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                      const tag_list& tags, slave_message_buffer& messages) const override;
+				    data_line_set<number> derive_lines
+				      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 		      protected:
 
@@ -183,8 +183,8 @@ namespace transport
 
 
 				template <typename number>
-				void largest_u2_line<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                                   const tag_list& tags, slave_message_buffer& messages) const
+				data_line_set<number> largest_u2_line<number>::derive_lines
+				  (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 					{
 				    // attach our datapipe to a content group
 				    std::string group = this->attach(pipe, tags);
@@ -226,7 +226,9 @@ namespace transport
 
             std::vector<number> u2_tensor(2*Nfields * 2*Nfields);
 
-            for(auto & k_config : k_configs)
+            data_line_set<number> lines;
+
+            for(const auto& k_config : k_configs)
               {
                 std::vector<number> line_data(t_axis.size());
 
@@ -255,6 +257,7 @@ namespace transport
               }
 
             this->detach(pipe);
+            return lines;
 			    }
 
 

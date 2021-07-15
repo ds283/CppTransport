@@ -33,6 +33,11 @@
 #include <string>
 #include <cmath>
 #include <utility>
+#include <fstream>
+#include <functional>
+#include <cstdlib>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "transport-runtime/tasks/derivable_task.h"
 #include "transport-runtime/derived-products/derived_product.h"
@@ -45,6 +50,9 @@
 #include "transport-runtime/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
+#include "transport-runtime/derived-products/line-collections/line_collection.h"
+#include "transport-runtime/utilities/plot_environment.h"
+#include "boost/log/utility/formatting_ostream.hpp"
 
 
 namespace transport
@@ -93,141 +101,180 @@ namespace transport
 
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY = "line-array";
 
-				//! A line-collection is a specialization of a derived_product<> that produces
-				//! derived data from a collection of 2d lines
 
+        //! An output_value is an atomic "line data" element.
+        //! It represents a y-value, wrapping a double value,
+        //! but also has a flag indicating whether this particular value
+        //! exists or is just a placeholder.
+        //! output_value also knows how to format itself for different
+        //! output devices
+        class output_value
+          {
+
+          public:
+
+            explicit output_value(double v)
+              : exists(true),
+                value(v)
+              {
+              }
+
+            output_value()
+              : exists(false),
+                value{}
+              {
+              }
+
+            ~output_value() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            //! check whether this is a real value
+            bool is_present() const { return(this->exists); }
+
+
+            // FORMAT VALUE
+
+          public:
+
+            //! Format for output to a Python script
+            void format_python(std::ostream& out) const;
+
+            //! Format as a number
+            double format_number() const;
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! does this value exist?
+            bool exists;
+
+            //! numerical value, if exists
+            double value;
+
+          };
+
+
+        //! container type for output_values representing an output data series
+        using output_data_series = std::deque<output_value>;
+
+
+        //! An output_line is a collection of output values, together with a label.
+        //! output_lines inherit their type from their parent data_line
+        class output_line
+          {
+
+          public:
+
+            output_line(std::string  l, value_type v, data_line_type d)
+              : label(std::move(l)),
+                value(v),
+                data_type(d)
+              {
+              }
+
+            ~output_line() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            //! Add a value at the back
+            void push_back(output_value v) { this->values.push_back(std::move(v)); }
+
+            //! Add a value at the front
+            void push_front(output_value v) { this->values.push_front(std::move(v)); }
+
+            //! Emplace a value at the back
+            template <typename ...Args>
+            void emplace_back(Args&& ... args) { this->values.emplace_back(std::forward<Args>(args) ...); }
+
+            //! Emplace a value at the front
+            template <typename ...Args>
+            void emplace_front(Args&& ... args) { this->values.emplace_front(std::forward<Args>(args) ...); }
+
+            //! Get values
+            const output_data_series& get_values() const { return(this->values); }
+
+            //! Get size
+            unsigned int size() const { return(this->values.size()); }
+
+            //! Get label
+            const std::string& get_label() const { return(this->label); }
+
+            //! Get value type (inherited from parent line)
+            value_type get_value_type() const { return(this->value); }
+
+            //! Get data line type (inherited from parent line)
+            data_line_type get_data_line_type() const { return(this->data_type); }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! this line's label
+            std::string label;
+
+            //! this line's value, inherited from its parent
+            value_type value;
+
+            //! this line's data type, inherited from its parent
+            data_line_type data_type;
+
+            //! this line's data points
+            output_data_series values;
+
+          };
+
+
+        //! A line-collection is a specialization of a derived_product<> that produces
+				//! derived data from a collection of 2d lines
 				template <typename number>
 				class line_collection: public derived_product<number>
 					{
 
 				  public:
 
-						//! An output_value is an atomic plotting element.
-						//! It represents a y-value, wrapping a 'number' value,
-						//! but also has a flag indicating whether this particular value
-						//! exists or is just a placeholder.
-						//! output_value also knows how to format itself for different
-						//! output devices
-				    class output_value
-					    {
+				    // LINE_COLLECTION: NAMED TYPES
 
-				      public:
+            //! container type for the set of derived_line<> instances we hold
+            using derived_line_set = std::list< std::unique_ptr< derived_line<number> > >;
 
-				        explicit output_value(double v)
-					        : exists(true),
-					          value(v)
-					        {
-					        }
+            //! output_axis represents the combined set of x-axis points generated after merging a group of
+            //! data lines
+            using output_axis = std::deque<double>;
 
-				        output_value()
-					        : exists(false),
-					          value{}
-					        {
-					        }
+            //! container type for a group of output lines. An output line is a list of *values* and a label.
+            //! output_line is an internal concept that is used by line_collection<> and its descendent classes;
+            //! data_line<> is a global concept that is used by all derived content generators.
+            //! The difference is that data_line<> consists of (x,y) pairs + metadata, and is self-container.
+            //! An output_line is supposed to be associated with a merged axis, so consists only of *values*
+            //! (no x sample points), and needs an output_axis instance to specify what those are.
+            //! It also has less metadata than the original data_line<>
+            using output_line_set = std::list<output_line>;
 
-				        ~output_value() = default;
+            //! container type for a merged group of data lines; consists of merged axis (in output_axis format)
+            //! and a set of output_line instances (in output_line_set format)
+            using merged_line_set = std::pair< output_axis, output_line_set >;
 
+            //! output_line_ref_set is a container type for a set of references to the contents of an output_line_set
+            //! object. This means we don't have to keep taking copies, but can instead just pass around
+            //! iterators
+            using output_line_ref_set = std::list<output_line_set::const_iterator>;
 
-						    // INTERFACE
+            //! binned output lines are represented as a map from value_type to a output_line_ref_set representing
+            //! the lines in the bin labeled by value_type
+            using binned_lines = std::unordered_map< value_type, output_line_ref_set >;
 
-				      public:
-
-						    //! check whether this is a real value
-						    bool is_present() const { return(this->exists); }
-
-
-				        // FORMAT VALUE
-
-				      public:
-
-						    //! Format for output to a Python script
-				        void format_python(std::ostream& out) const;
-
-						    //! Format as a number
-						    number format_number() const;
-
-
-				        // INTERNAL DATA
-
-				      private:
-
-				        //! does this value exist?
-				        bool exists;
-
-				        //! numerical value, if exists
-				        double value;
-
-					    };
-
-
-						//! An output_line is a collection of output values, together with a label.
-						//! output_lines inherit their type from their parent data_line
-				    class output_line
-					    {
-
-				      public:
-
-				        output_line(std::string  l, value_type v, data_line_type d)
-					        : label(std::move(l)),
-				            value(v),
-				            data_type(d)
-					        {
-					        }
-
-				        ~output_line() = default;
-
-
-				        // INTERFACE
-
-				      public:
-
-				        //! Add a value at the back
-				        void push_back(output_value v) { this->values.push_back(std::move(v)); }
-
-				        //! Add a value at the front
-				        void push_front(output_value v) { this->values.push_front(std::move(v)); }
-                
-                //! Emplace a value at the back
-                template <typename ...Args>
-                void emplace_back(Args&& ... args) { this->values.emplace_back(std::forward<Args>(args) ...); }
-                
-                //! Emplace a value at the front
-                template <typename ...Args>
-                void emplace_front(Args&& ... args) { this->values.emplace_front(std::forward<Args>(args) ...); }
-
-				        //! Get values
-				        const std::deque<output_value>& get_values() const { return(this->values); }
-
-				        //! Get size
-				        unsigned int size() const { return(this->values.size()); }
-
-				        //! Get label
-				        const std::string& get_label() const { return(this->label); }
-
-						    //! Get value type (inherited from parent line)
-						    value_type get_value_type() const { return(this->value); }
-
-						    //! Get data line type (inherited from parent line)
-						    data_line_type get_data_line_type() const { return(this->data_type); }
-
-
-				        // INTERNAL DATA
-
-				      private:
-
-				        //! this line's label
-				        std::string label;
-
-						    //! this line's value, inherited from its parent
-						    value_type value;
-
-						    //! this line's data type, inherited from its parent
-						    data_line_type data_type;
-
-				        //! this line's data points
-				        std::deque<output_value> values;
-
-					    };
+            //! we package binned lines together with the output_axis object, as for merged_line_set
+            using binned_line_set = std::pair< const output_axis&, binned_lines >;
 
 
 						// LINE_COLLECTION: CONSTRUCTOR, DESTRUCTOR
@@ -272,7 +319,7 @@ namespace transport
               }
 
             //! Get list of lines in collection
-            const std::list< std::unique_ptr< derived_line<number> > >& get_lines() const { return(this->lines); }
+            const derived_line_set& get_lines() const { return(this->lines); }
 
 						//! Get x-axis type
 						axis_value get_x_axis_value() const;
@@ -280,13 +327,22 @@ namespace transport
 
 				  protected:
 
-				    //! Merge axes and value data into a single series
-				    void merge_lines(datapipe<number>& pipe, const std::list< data_line<number> >& input,
-                             std::deque<double>& axis, std::vector<output_line>& output) const;
+				    //! Merge a set of x-axis and value data (represented by 'data_line', which is the output type
+				    //! for each derived_line<> instance) into a single x-axis, with "masked" values inserted in the output
+				    //! lines for any massing x-axis data points.
+				    //! Returns a merged_line_set, which is a std::pair with first value representing the merged
+				    //! x-axis, and second value representing the (masked) data lines (in 'output_line' format).
+				    //! So this function can be regarded as turning a list of 'data_line' instances into 'output_line'
+				    //! instances.
+				    //! Notice that the datapipe<> is needed only for logging. No data is pulled from the pipe.
+				    merged_line_set merge_lines(datapipe<number>& pipe, const data_line_set<number>& input) const;
 
-						//! Obtain output from our lines
-				    void obtain_output(datapipe<number>& pipe, const tag_list& tags,
-                               std::list< data_line<number> >& derived_lines, slave_message_buffer& messages) const;
+						//! obtain output from our lines
+				    data_line_set<number> obtain_output(datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const;
+
+            //! Bin lines according to their value type
+            binned_line_set bin_lines(const merged_line_set& input, slave_message_buffer& messages,
+                                      boost::optional<unsigned int> max_bins = boost::none);
 
 
             // DERIVED PRODUCTS -- AGGREGATE CONSTITUENT TASKS -- implements a 'derived_product' interface
@@ -294,8 +350,10 @@ namespace transport
           public:
 
             //! Collect a list of tasks which this derived product depends on;
-            //! used by the repository to autocommit any necessary tasks
-            virtual typename derivable_task_set<number>::type get_task_dependencies() const override;
+            //! used by the repository to autocommit any necessary tasks, and by the task scheduler
+            //! to determine which jobs should be scheduled to generate input data for any task
+            //! containing this line
+            typename derivable_task_set<number>::type get_task_dependencies() const override;
 
 
             // AGGREGATE OUTPUT GROUPS FROM A LIST OF LINES
@@ -355,8 +413,8 @@ namespace transport
 
 				    // PLOT DATA
 
-				    //! List of data_line objects to be plotted on the graph.
-				    std::list< std::unique_ptr< derived_line<number> > > lines;
+				    //! Group of data_line objects
+				    derived_line_set lines;
 
 
 						// LINE HANDLING ATTRIBUTES
@@ -373,7 +431,96 @@ namespace transport
 				    //! use LaTeX labels?
 				    bool use_LaTeX;
 
-					};
+          };
+
+
+				namespace line_collection_impl
+          {
+
+            template <typename number>
+            using point = typename data_line<number>::point;
+
+            template <typename number>
+            using point_list = typename data_line<number>::point_list;
+
+            template <typename number>
+            class merge_line_data
+              {
+              public:
+
+                //! constructor captures discardable point_list (we burn through this as part of the
+                //! merge operation), a flag to indicate whether abs_y is required,
+                //! and a nascent output_line
+                merge_line_data(point_list<number> p, bool a, output_line o)
+                  : points{std::move(p)},
+                    abs_y(a),
+                    line{std::move(o)}
+                  {
+                  }
+
+
+                // ACCESS API
+
+              public:
+
+                //! get number of remaining points
+                size_t remaining_points() const { return points.size(); }
+
+                //! is empty?
+                bool empty() const { return points.empty(); }
+
+                //! get abs_y flag
+                bool get_abs_y() const { return this->abs_y; }
+
+                //! get next data point from back of points list
+                const point<number>& get_back_point() const { return this->points.back(); }
+
+                //! get output_line as rvalue reference, so can be moved to correct location
+                output_line&& get_output_line() { return std::move(this->line); }
+
+
+                // INSERT
+
+              public:
+
+                //! insert new point at front of output line
+                void push_front(output_value p) { this->line.push_front(std::move(p)); }
+
+                //! insert new point at back of output line
+                void push_back(output_value p) { this->line.push_back(std::move(p)); }
+
+                //! Emplace a value at the back
+                template <typename ...Args>
+                void emplace_back(Args&& ... args) { this->line.emplace_back(std::forward<Args>(args) ...); }
+
+                //! Emplace a value at the front
+                template <typename ...Args>
+                void emplace_front(Args&& ... args) { this->line.emplace_front(std::forward<Args>(args) ...); }
+
+
+                // POP
+
+              public:
+
+                void pop_back() { this->points.pop_back(); }
+
+
+                // INTERNAL DATA
+
+              private:
+
+                //! list of points remaining to consider during the merge; discarded one-by-one during the operation
+                point_list<number> points;
+
+                //! flag to indicate whether abs_y is required
+                bool abs_y;
+
+                //! output line. Built up here, but eventually emplaced into the final output_line_set
+                output_line line;
+
+              };
+
+          }   // namespace line_collection_impl
 
 
 				template <typename number>
@@ -451,28 +598,34 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_collection<number>::obtain_output(datapipe<number>& pipe, const tag_list& tags,
-                                                    std::list< data_line<number> >& derived_lines, slave_message_buffer& messages) const
+		    data_line_set<number>
+		    line_collection<number>::obtain_output(datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 			    {
+			      data_line_set<number> data_lines;
+
             for(const auto& line : this->lines)
 			        {
-		            line->derive_lines(pipe, derived_lines, tags, messages);
+		            auto new_lines = line->derive_lines(pipe, tags, messages);
+		            data_lines.splice(data_lines.end(), new_lines);
 			        }
+
+            return data_lines;
 			    }
 
 
 		    template <typename number>
-		    void line_collection<number>::merge_lines(datapipe<number>& pipe, const std::list< data_line<number> >& input,
-                                                  std::deque<double>& axis, std::vector<output_line>& output) const
+		    typename line_collection<number>::merged_line_set
+        line_collection<number>::merge_lines(datapipe<number>& pipe, const data_line_set<number>& input) const
 			    {
-		        // step through our plot lines, merging axis data and excluding any lines which are unplottable
+			      output_axis axis;
+			      output_line_set output;
 
-		        // FIRST, build a list of plottable lines container in 'input',
-		        // and work out whether we need to take the absolute value
-		        output.clear();
+		        std::list< line_collection_impl::merge_line_data<number> > merge_data;
 
-		        std::vector< typename data_line<number>::point_list > data;
-		        std::vector<bool> data_absy;
+            // step through our plot lines, merging axis data and excluding any lines which are unplottable
+
+            // FIRST, build a list of plottable lines contained in 'input', and for each one work out whether we
+            // need to take the absolute value of the data points
 
             for(const auto& line : input)
 			        {
@@ -483,10 +636,12 @@ namespace transport
 
 		            if(this->log_y)
 			            {
-		                for(auto u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); ++u)
+		                for(const auto& d : line_data)
 			                {
-		                    if(u->second <= 0.0) need_abs_y = true;
-		                    if(u->second > 0.0 || u->second < 0.0) nonzero_values = true;
+		                    if(d.second <= 0.0) need_abs_y = true;
+		                    // TODO: this test is probably not stable. Check for zero within finite tolerance
+		                    if(d.second > 0.0 || d.second < 0.0) nonzero_values = true;
+		                    if(need_abs_y && nonzero_values) break;
 			                }
 
 		                // issue warnings if required
@@ -515,84 +670,114 @@ namespace transport
 				        //    ** the x-axis is logarithmic but there are some nonpositive points
 		            if((!this->log_x || (this->log_x && nonzero_axis)) && (!this->log_y || (this->log_y && nonzero_values)))
 			            {
-		                output.emplace_back(this->use_LaTeX ? line.get_LaTeX_label() : line.get_non_LaTeX_label(), line.get_value_type(), line.get_data_line_type());
-		                data_absy.push_back(this->abs_y || need_abs_y);
-
-				            data.emplace_back(line.get_data_points());
+                    merge_data.emplace_back(line.get_data_points(), this->abs_y || need_abs_y,
+                                            output_line{
+                                              this->use_LaTeX ? line.get_LaTeX_label() : line.get_non_LaTeX_label(),
+                                              line.get_value_type(), line.get_data_line_type()});
 			            }
 			        }
 
 		        // SECOND work through each axis, populating the single merged axis
 				    // the data lines are all guaranteed to be sorted into ascending order, so we can rely on that
 		        axis.clear();
-		        bool finished = false;
 
-		        while(!finished)
+            boost::optional<double> next_axis_point;
+		        do
 			        {
-		            finished = true;
+                // find next point to add to merged x-axis (we work from the far right because std::vector can only
+                // pop from the end), or determine there are no points left to merge
+                next_axis_point = boost::none;
 
-		            // any work left to do?
-		            for(unsigned int i = 0; finished && i < output.size(); ++i)
+		            // any work left to do? if so, get next point from the *back* of the aggregate input line set
+		            for(const auto& d : merge_data)
 			            {
-		                if(data[i].size() > 0) finished = false;
+			              if(!d.empty())
+                      {
+                        const auto& point = d.get_back_point();
+                        if(!next_axis_point || point.first > *next_axis_point) next_axis_point = point.first;
+                      }
 			            }
 
-		            if(!finished)
-			            {
-		                // find next point to add to merged x-axis (we work from the far right because std::vector can only pop from the end)
-		                double next_axis_point = -std::numeric_limits<double>::max();
-		                for(unsigned int i = 0; i < output.size(); ++i)
-			                {
-		                    if(data[i].size() > 0)
-			                    {
-				                    const auto& point = data[i].back();
-		                        if(point.first > next_axis_point) next_axis_point = point.first;
-			                    }
-			                }
+                if(!next_axis_point) break;
 
-		                if(next_axis_point != -std::numeric_limits<double>::max())
-			                {
-		                    // push point to merged axis
-		                    axis.push_front(next_axis_point);
+                const double p = *next_axis_point;
 
-		                    // find data points on each line, if they exist, corresponding to this axis point
-		                    for(unsigned int i = 0; i < output.size(); ++i)
-			                    {
-		                        if(data[i].size() > 0)
-			                        {
-				                        const std::pair<double, number>& point = data[i].back();
+                // push point to *front* of merged axis
+                axis.push_front(p);
 
-		                            if(std::abs((point.first - next_axis_point)/point.first) < CPPTRANSPORT_AXIS_MERGE_TOLERANCE)   // yes, this line has a match
-			                            {
-                                    // output_value currently stores everything using double, so we may need an
-                                    // explicit downcast at this point
-                                    // TODO: consider whether output_value should retain the full 'number' type
-                                    auto value = static_cast<double>(point.second);
-                                    
-		                                output[i].emplace_front(data_absy[i] ? std::abs(value) : value);
+                // find data points on each line, if they exist, corresponding to this axis point
+                for(auto& d : merge_data)
+                  {
+                    // are there any points left to consider? if so, look at those, otherwise we emplace an empty
+                    // point
+                    if(!d.empty())
+                      {
+                        const auto& point = d.get_back_point();
 
-		                                // remove point from this line
-		                                data[i].pop_back();
-			                            }
-		                            else
-                                  {
-                                    output[i].emplace_front(output_value{});
-			                            }
-			                        }
-		                        else  // no match, add an empty component
-			                        {
-		                            output[i].emplace_front(output_value{});
-			                        }
-			                    }
-			                }
-		                else
-			                {
-		                    BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::error) << ":: Error: failed to find new axis point to merge; giving up";
-		                    finished = true;
-			                }
-			            }
-			        }
+                        if(std::abs((point.first - p)/point.first) < CPPTRANSPORT_AXIS_MERGE_TOLERANCE)   // yes, this line has a match
+                          {
+                            // output_value currently stores everything using double, so we may need an
+                            // explicit downcast at this point
+                            // TODO: consider whether output_value should retain the full 'number' type
+                            auto value = static_cast<double>(point.second);
+
+                            // emplace this value at the front of the output line held by d
+                            d.emplace_front(d.get_abs_y() ? std::abs(value) : value);
+
+                            // remove point from this line
+                            d.pop_back();
+                          }
+                        else
+                          {
+                            // this data line doesn't contain the point p, so much an empty ("masked") element
+                            d.push_front(output_value{});
+                          }
+                      }
+                    else  // no match, add an empty("masked") element
+                      {
+                        d.push_front(output_value{});
+                      }
+                  }
+			        } while(next_axis_point);
+
+		        // emplace the newly constructed output lines in the output_line_set
+		        for(auto& d : merge_data)
+              {
+                output.push_back(d.get_output_line());
+              }
+
+            return { std::move(axis), std::move(output) };
 			    }
+
+
+        template <typename number>
+        typename line_collection<number>::binned_line_set
+        line_collection<number>::bin_lines(const merged_line_set& input, slave_message_buffer& messages,
+                                           boost::optional<unsigned int> max_bin)
+          {
+            // loop through available input lines
+            binned_lines binned;
+
+            const auto& merged_lines = input.second;
+            for(auto t = merged_lines.cbegin(); t != merged_lines.cend(); ++t)
+              {
+                // find bin for this line; will construct empty bin if this value_type has not previously
+                // been encountered
+                auto& bin = binned[t->get_value_type()];
+
+                // copy output line into bin
+                bin.push_back(t);
+              }
+
+//            if(binned_lines.size() > 2)
+//              {
+//                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::error) << "!! line_plot2d: more than two y-value types; unplottable values have been discarded";
+//                binned_lines.resize(2);
+//                bin_types.resize(2);
+//              }
+
+            return { input.first, std::move(binned) };
+          }
 
 
         template <typename number>
@@ -696,8 +881,7 @@ namespace transport
 					}
 
 
-		    template <typename number>
-		    void line_collection<number>::output_value::format_python(std::ostream& out) const
+		    void output_value::format_python(std::ostream& out) const
 			    {
 		        if(this->exists)
 			        {
@@ -710,8 +894,7 @@ namespace transport
 			    }
 
 
-				template <typename number>
-				number line_collection<number>::output_value::format_number(void) const
+				double output_value::format_number(void) const
 					{
 						if(this->exists)
 							{

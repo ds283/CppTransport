@@ -88,8 +88,8 @@ namespace transport
           public:
 
             //! generate data lines for plotting
-            virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                                      const tag_list& tags, slave_message_buffer& messages) const override;
+            data_line_set<number> derive_lines
+              (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
             //! generate a LaTeX label
             std::string get_LaTeX_label() const;
@@ -165,8 +165,8 @@ namespace transport
 
 
         template <typename number>
-        void fNL_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                                                   const tag_list& tags, slave_message_buffer& messages) const
+        data_line_set<number> fNL_time_series<number>::derive_lines
+          (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
           {
             // attach datapipe to a content group
             std::string group = this->attach(pipe, tags);
@@ -182,10 +182,12 @@ namespace transport
 		        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
             const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
+            data_line_set<number> lines;
             lines.emplace_back(group, this->x_type, value_type::fNL, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 
             // detach pipe from content group
             this->detach(pipe);
+            return lines;
           }
 
 

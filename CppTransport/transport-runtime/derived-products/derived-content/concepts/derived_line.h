@@ -266,8 +266,8 @@ namespace transport
 				  public:
 
 				    //! generate data lines for plotting, output to tables, or whatever other purpose is intended
-				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-				                              const tag_list& tags, slave_message_buffer& messages) const = 0;
+				    virtual data_line_set<number> derive_lines
+				      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const = 0;
 
 
 				    // CLONE

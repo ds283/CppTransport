@@ -94,8 +94,8 @@ namespace transport
           public:
 
             //! generate data lines for plotting
-            virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                                      const tag_list& tags, slave_message_buffer& messages) const override;
+            data_line_set<number> derive_lines
+              (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
             //! generate a LaTeX label
             std::string get_LaTeX_label(unsigned int m, unsigned int n, double t) const;
@@ -168,8 +168,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void twopf_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-		                                                       const tag_list& tags, slave_message_buffer& messages) const
+		    data_line_set<number> twopf_wavenumber_series<number>::derive_lines
+		      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 			    {
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
@@ -192,8 +192,10 @@ namespace transport
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
 		        const typename std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
+		        data_line_set<number> lines;
+
 				    // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
-				    for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t)
+				    for(const auto& t_value : t_values)
 					    {
 						    for(unsigned int m = 0; m < 2*N_fields; ++m)
 							    {
@@ -203,36 +205,36 @@ namespace transport
 								        if(this->active_indices.is_on(index_set))
 									        {
 								            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(this->is_real_twopf() ? cf_data_type::cf_twopf_re : cf_data_type::cf_twopf_im,
-								                                                                           this->gadget.get_model()->flatten(m, n), t->serial);
+								                                                                           this->gadget.get_model()->flatten(m, n), t_value.serial);
 
 								            std::vector<number> line_data = k_handle.lookup_tag(tag);
                             assert(line_data.size() == k_values.size());
 
                             value_type value;
-								            if(this->dimensionless)
-									            {
-                                typename std::vector<number>::iterator     l_pos = line_data.begin();
-                                std::vector<twopf_kconfig>::const_iterator k_pos = k_values.begin();
-								                for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
-									                {
-								                    *l_pos *= 1.0 / (2.0*M_PI*M_PI);
-									                }
+                            if(this->dimensionless)
+                              {
+                                auto l_pos = line_data.begin();
+                                auto k_pos = k_values.cbegin();
+                                for(; l_pos != line_data.cend() && k_pos != k_values.cend(); ++l_pos, ++k_pos)
+                                  {
+                                    *l_pos *= 1.0 / (2.0 * M_PI * M_PI);
+                                  }
                                 value = value_type::dimensionless;
-									            }
+                              }
                             else
                               {
-                                typename std::vector<number>::iterator     l_pos = line_data.begin();
-                                std::vector<twopf_kconfig>::const_iterator k_pos = k_values.begin();
-                                for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
+                                auto l_pos = line_data.begin();
+                                auto k_pos = k_values.cbegin();
+                                for(; l_pos != line_data.cend() && k_pos != k_values.cend(); ++l_pos, ++k_pos)
                                   {
                                     double k_cube = k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving;
-                                    *l_pos *=  1.0 / k_cube;
+                                    *l_pos *= 1.0 / k_cube;
                                   }
                                 value = value_type::correlation_function;
                               }
 
                             lines.emplace_back(group, this->x_type, value, w_axis, line_data,
-                                               this->get_LaTeX_label(m,n,t->t), this->get_non_LaTeX_label(m,n,t->t), messages, this->is_spectral_index());
+                                               this->get_LaTeX_label(m,n,t_value.t), this->get_non_LaTeX_label(m,n,t_value.t), messages, this->is_spectral_index());
                           }
 									    }
 							    }
@@ -240,6 +242,7 @@ namespace transport
 
 		        // detach pipe from content group
 		        this->detach(pipe);
+				    return lines;
 			    }
 
 
@@ -354,8 +357,8 @@ namespace transport
 		      public:
 
 		        //! generate data lines for plotting
-		        virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-		                                  const tag_list& tags, slave_message_buffer& messages) const override;
+		        data_line_set<number> derive_lines
+		          (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 		        //! generate a LaTeX label
 		        std::string get_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, double t) const;
@@ -432,8 +435,8 @@ namespace transport
 
 
         template <typename number>
-        void threepf_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                                             const tag_list& tags, slave_message_buffer& messages) const
+        data_line_set<number> threepf_wavenumber_series<number>::derive_lines
+          (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 	        {
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
@@ -453,29 +456,14 @@ namespace transport
             time_config_tag<number>        t_tag    = pipe.new_time_config_tag();
             const std::vector<time_config> t_values = tc_handle.lookup_tag(t_tag);
 
-            // pull the background field configuration for each time sample point
-            std::vector< std::vector<number> > background(t_values.size());
-            for(unsigned int i = 0; i < 2*N_fields; ++i)
-	            {
-                background_time_data_tag<number> tag = pipe.new_background_time_data_tag(i);
-                const std::vector<number> bg_line = t_handle.lookup_tag(tag);
-                assert(bg_line.size() == t_values.size());
-
-                typename std::vector<std::vector<number> >::iterator bg_pos = background.begin();
-                typename std::vector<number>::const_iterator         l_pos  = bg_line.begin();
-                for(; bg_pos != background.end() && l_pos != bg_line.end(); ++bg_pos, ++l_pos)
-	                {
-                    bg_pos->push_back(*l_pos);
-	                }
-	            }
-
             // extract k-configuration data
             threepf_kconfig_tag<number>  k_tag    = pipe.new_threepf_kconfig_tag();
             std::vector<threepf_kconfig> k_values = kc_handle.lookup_tag(k_tag);
 
+            data_line_set<number> lines;
+
             // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
-            typename std::vector< std::vector<number> >::const_iterator bg_pos = background.begin();
-            for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t, ++bg_pos)
+            for(const auto& t_value : t_values)
 	            {
                 for(unsigned int l = 0; l < 2*N_fields; ++l)
 	                {
@@ -487,7 +475,7 @@ namespace transport
 		                        if(this->active_indices.is_on(index_set))
 			                        {
 		                            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(this->get_dot_meaning() == dot_type::derivatives ? cf_data_type::cf_threepf_Nderiv : cf_data_type::cf_threepf_momentum,
-                                                                                               this->gadget.get_model()->flatten(l,m,n), t->serial);
+                                                                                               this->gadget.get_model()->flatten(l,m,n), t_value.serial);
 
 		                            std::vector<number> line_data = k_handle.lookup_tag(tag);
                                 assert(line_data.size() == w_axis.size());
@@ -499,9 +487,9 @@ namespace transport
                                   }
                                 else
                                   {
-                                    typename std::vector<number>::iterator       l_pos = line_data.begin();
-                                    std::vector<threepf_kconfig>::const_iterator k_pos = k_values.begin();
-                                    for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
+                                    auto l_pos = line_data.begin();
+                                    auto k_pos = k_values.cbegin();
+                                    for(; l_pos != line_data.cend() && k_pos != k_values.cend(); ++l_pos, ++k_pos)
                                       {
                                         double shape = k_pos->k1_comoving*k_pos->k1_comoving * k_pos->k2_comoving*k_pos->k2_comoving * k_pos->k3_comoving*k_pos->k3_comoving;
                                         *l_pos *= 1.0/shape;
@@ -510,7 +498,7 @@ namespace transport
                                   }
 
                                 lines.emplace_back(group, this->x_type, value, w_axis, line_data,
-                                                   this->get_LaTeX_label(l,m,n,t->t), this->get_non_LaTeX_label(l,m,n,t->t), messages, this->is_spectral_index());
+                                                   this->get_LaTeX_label(l,m,n,t_value.t), this->get_non_LaTeX_label(l,m,n,t_value.t), messages, this->is_spectral_index());
 			                        }
 			                    }
 	                    }
@@ -519,6 +507,7 @@ namespace transport
 
             // detach pipe from content group
             this->detach(pipe);
+            return lines;
 	        }
 
 

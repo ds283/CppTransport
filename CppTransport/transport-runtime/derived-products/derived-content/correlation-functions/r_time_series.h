@@ -93,8 +93,8 @@ namespace transport
 		      public:
 
 				    //! generate data lines for plotting
-				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-				                              const tag_list& tags, slave_message_buffer& messages) const override;
+				    data_line_set<number> derive_lines
+				      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 		        //! generate a LaTeX label
 		        std::string get_LaTeX_label(const twopf_kconfig& k) const;
@@ -176,8 +176,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void r_time_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-		                                             const tag_list& tags, slave_message_buffer& messages) const
+		    data_line_set<number> r_time_series<number>::derive_lines
+		      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 			    {
             content_group_name_set groups;
 
@@ -196,17 +196,16 @@ namespace transport
 		        twopf_kconfig_tag<number>                 k_tag    = pipe.new_twopf_kconfig_tag();
 		        const typename std::vector<twopf_kconfig> k_values = k_handle.lookup_tag(k_tag);
 
-		        std::vector< std::vector<number> > zeta_data;
-				    zeta_data.resize(k_values.size());
+		        // store time history of zeta data for each k-configuration, indexed by the configuration serial number
+		        std::map< unsigned int, std::vector<number> > zeta_data;
 
 				    // for each k-configuration, pull data from the database
-            unsigned int i = 0;
-				    for(auto t = k_values.begin(); t != k_values.end(); ++t, ++i)
+				    for(const auto& k_value : k_values)
 					    {
-				        zeta_twopf_time_data_tag<number> zeta_tag = pipe.new_zeta_twopf_time_data_tag(*t);
+				        zeta_twopf_time_data_tag<number> zeta_tag = pipe.new_zeta_twopf_time_data_tag(k_value);
 
 				        // this time we can take a reference
-				        zeta_data[i] = z_handle.lookup_tag(zeta_tag);
+				        zeta_data[k_value.serial] = z_handle.lookup_tag(zeta_tag);
 					    }
 
 				    pipe.detach();
@@ -216,16 +215,17 @@ namespace transport
             groups.insert(group);
 
 						// rebind handles
-				    i = 0;  // reset counter
 		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->tquery);
 
-				    for(auto t = k_values.begin(); t != k_values.end(); ++t)
+		        data_line_set<number> lines;
+
+				    for(const auto& k_value : k_values)
 					    {
-				        cf_time_data_tag<number> tensor_tag = pipe.new_cf_time_data_tag(cf_data_type::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), t->serial);
+				        cf_time_data_tag<number> tensor_tag = pipe.new_cf_time_data_tag(cf_data_type::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), k_value.serial);
 
 				        // must copy this, because we will call lookup_tag() again
 				        const std::vector<number> tensor_data = t_handle.lookup_tag(tensor_tag);
-						    assert(tensor_data.size() == zeta_data[i].size());
+						    assert(tensor_data.size() == zeta_data[k_value.serial].size());
 
 				        std::vector<number> line_data(tensor_data.size());
 
@@ -236,15 +236,16 @@ namespace transport
 					          // The conventionally-defined tensor power spectrum is the sum over polarizations, which yields
 					          // a factor of 2. But also, in our normalization there is another factor of 2 that comes from
 					          // tracing over the polarization tensors.
-				            line_data[j] = 4.0 * tensor_data[j] / zeta_data[i][j];
+				            line_data[j] = 4.0 * tensor_data[j] / zeta_data[k_value.serial][j];
 					        }
 
 				        lines.emplace_back(groups, this->x_type, value_type::r, t_axis, line_data,
-                                   this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]), messages);
+                                   this->get_LaTeX_label(k_value), this->get_non_LaTeX_label(k_value), messages);
 					    }
 
 				    // detach pipe from content group
 				    this->detach(pipe);
+				    return lines;
 			    }
 
 

@@ -90,8 +90,8 @@ namespace transport
           public:
 
 		        //! generate data lines for plotting
-            virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                                      const tag_list& tags, slave_message_buffer& messages) const override;
+            data_line_set<number> derive_lines
+              (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 
 		        // LABEL GENERATION
@@ -205,8 +205,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void background_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-		                                                      const tag_list& tags, slave_message_buffer& messages) const
+		    data_line_set<number> background_time_series<number>::derive_lines
+		      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
           {
             // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
@@ -216,6 +216,8 @@ namespace transport
             // loop through all the fields, pulling data from the database for those which are enabled
 
 		        typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->tquery);
+
+		        data_line_set<number> lines;
 
             for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
               {
@@ -237,6 +239,7 @@ namespace transport
 
             // detach pipe from content group
             this->detach(pipe);
+            return lines;
           }
 
 
@@ -329,7 +332,7 @@ namespace transport
           public:
 
             //! get type
-            virtual derived_line_type get_line_type() const override { return derived_line_type::twopf_time; }
+            derived_line_type get_line_type() const override { return derived_line_type::twopf_time; }
 
 
             // EXTRACT QUERIES
@@ -348,8 +351,8 @@ namespace transport
           public:
 
 		        //! generate data lines for plotting
-            virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                                      const tag_list& tags, slave_message_buffer& messages) const override;
+            data_line_set<number> derive_lines
+              (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 		        //! generate a LaTeX label
 		        std::string get_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const;
@@ -420,8 +423,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void twopf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-		                                                 const tag_list& tags, slave_message_buffer& messages) const
+		    data_line_set<number> twopf_time_series<number>::derive_lines
+		      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 			    {
             // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
@@ -438,9 +441,11 @@ namespace transport
 
 		        const typename std::vector< twopf_kconfig > k_values = k_handle.lookup_tag(k_tag);
 
+		        data_line_set<number> lines;
+
 		        // loop through all components of the twopf, for each k-configuration we use,
 		        // pulling data from the database
-		        for(std::vector<twopf_kconfig>::const_iterator t = k_values.begin(); t != k_values.end(); ++t)
+		        for(const auto& k_value : k_values)
 			        {
 		            for(unsigned int m = 0; m < 2*this->gadget.get_N_fields(); ++m)
 			            {
@@ -451,23 +456,23 @@ namespace transport
 			                    {
 		                        cf_time_data_tag<number> tag =
 			                                                 pipe.new_cf_time_data_tag(this->is_real_twopf() ? cf_data_type::cf_twopf_re : cf_data_type::cf_twopf_im,
-			                                                                           this->gadget.get_model()->flatten(m, n), t->serial);
+			                                                                           this->gadget.get_model()->flatten(m, n), k_value.serial);
 
 		                        std::vector<number> line_data = t_handle.lookup_tag(tag);
                             assert(line_data.size() == t_axis.size());
 
                             value_type value;
-		                        if(this->dimensionless)
-			                        {
-		                            for(unsigned int j = 0; j < line_data.size(); ++j)
-			                            {
-		                                line_data[j] *= 1.0 / (2.0*M_PI*M_PI);
-			                            }
+                            if(this->dimensionless)
+                              {
+                                for(unsigned int j = 0; j < line_data.size(); ++j)
+                                  {
+                                    line_data[j] *= 1.0 / (2.0 * M_PI * M_PI);
+                                  }
                                 value = value_type::dimensionless;
-			                        }
+                              }
                             else
                               {
-                                double k_cube = t->k_comoving * t->k_comoving * t->k_comoving;
+                                double k_cube = k_value.k_comoving * k_value.k_comoving * k_value.k_comoving;
                                 for(unsigned int j = 0; j < line_data.size(); ++j)
                                   {
                                     line_data[j] *= 1.0 / k_cube;
@@ -476,7 +481,7 @@ namespace transport
                               }
 
                             lines.emplace_back(group, this->x_type, value, t_axis, line_data,
-                                               this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t), messages);
+                                               this->get_LaTeX_label(m, n, k_value), this->get_non_LaTeX_label(m, n, k_value), messages);
 			                    }
 			                }
 			            }
@@ -484,6 +489,7 @@ namespace transport
 
             // detach pipe from content group
             this->detach(pipe);
+		        return lines;
 			    }
 
 
@@ -598,8 +604,8 @@ namespace transport
 		      public:
 
 		        //! generate data lines for plotting
-            virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                      const tag_list& tags, slave_message_buffer& messages) const override;
+            data_line_set<number> derive_lines
+              (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 		        //! generate a LaTeX label
 		        std::string get_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_kconfig& k) const;
@@ -675,8 +681,8 @@ namespace transport
 
 
         template <typename number>
-        void threepf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                                     const tag_list& tags, slave_message_buffer& messages) const
+        data_line_set<number> threepf_time_series<number>::derive_lines
+          (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 			    {
             // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
@@ -696,7 +702,9 @@ namespace transport
 		        // loop through all components of the threepf, for each k-configuration we use,
 		        // pulling data from the database
 
-		        for(const auto & k_value : k_values)
+		        data_line_set<number> lines;
+
+		        for(const auto& k_value : k_values)
 			        {
 		            for(unsigned int l = 0; l < 2*this->gadget.get_N_fields(); ++l)
 			            {
@@ -738,6 +746,7 @@ namespace transport
 
             // detach pipe from content group
             this->detach(pipe);
+		        return lines;
 			    }
 
 

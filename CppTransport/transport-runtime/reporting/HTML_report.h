@@ -2526,7 +2526,7 @@ namespace transport
         void HTML_report::write_line_list(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
                                           const derived_data::line_collection<number>& line_collection, HTML_node& parent)
           {
-            const std::list< std::unique_ptr< derived_data::derived_line<number> > >& lines = line_collection.get_lines();
+            const auto& lines = line_collection.get_lines();
 
             if(lines.empty()) return;
 
@@ -2550,7 +2550,7 @@ namespace transport
             line_list.add_attribute("class", "list-group");
 
             unsigned int count = 0;
-            for(const std::unique_ptr< derived_data::derived_line<number> >& line : lines)
+            for(const auto& line : lines)
               {
                 HTML_node item("li");
                 item.add_attribute("class", "list-group-item");

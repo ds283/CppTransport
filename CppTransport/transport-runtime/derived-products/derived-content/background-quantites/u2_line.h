@@ -94,8 +94,8 @@ namespace transport
 		      public:
 
 				    //! generate data lines for plotting
-				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                      const tag_list& tags, slave_message_buffer& messages) const override;
+				    data_line_set<number> derive_lines
+				      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 		      protected:
 
@@ -191,8 +191,8 @@ namespace transport
 
 
 				template <typename number>
-				void u2_line<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                           const tag_list& tags, slave_message_buffer& messages) const
+				data_line_set<number> u2_line<number>::derive_lines
+				  (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 					{
 				    // attach our datapipe to a content group
 				    std::string group = this->attach(pipe, tags);
@@ -234,7 +234,9 @@ namespace transport
 
             std::vector<number> u2_tensor(2*Nfields * 2*Nfields);
 
-            for(std::vector<twopf_kconfig>::iterator t = k_configs.begin(); t != k_configs.end(); ++t)
+            data_line_set<number> lines;
+
+            for(const auto& k_config : k_configs)
               {
                 for(unsigned int m = 0; m < 2*Nfields; ++m)
                   {
@@ -247,18 +249,19 @@ namespace transport
 
                             for(unsigned int j = 0; j < line_data.size(); ++j)
                               {
-                                mdl->u2(this->gadget.get_twopf_db_task(), bg_data[j], t->k_comoving, t_configs[j].t, u2_tensor);
+                                mdl->u2(this->gadget.get_twopf_db_task(), bg_data[j], k_config.k_comoving, t_configs[j].t, u2_tensor);
                                 line_data[j] = u2_tensor[mdl->flatten(m,n)];
                               }
 
                             lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
-                                               this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t), messages);
+                                               this->get_LaTeX_label(m,n,k_config), this->get_non_LaTeX_label(m,n,k_config), messages);
                           }
                       }
                   }
               }
 
             this->detach(pipe);
+            return lines;
 			    }
 
 

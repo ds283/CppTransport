@@ -95,8 +95,8 @@ namespace transport
           public:
 
             //! generate data lines for plotting
-            void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-            const tag_list& tags, slave_message_buffer& messages) const override;
+            data_line_set<number> derive_lines
+              (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
             //! generate a LaTeX label
             std::string get_LaTeX_label(double t) const;
@@ -169,8 +169,8 @@ namespace transport
 
 
         template <typename number>
-        void zeta_twopf_wavenumber_series<number>::derive_lines
-          (datapipe<number>& pipe, std::list< data_line<number> >& lines, const tag_list& tags, slave_message_buffer& messages) const
+        data_line_set<number> zeta_twopf_wavenumber_series<number>::derive_lines
+          (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
           {
             // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
@@ -190,6 +190,8 @@ namespace transport
             // pull k-configuration information from the database
             twopf_kconfig_tag<number>                 k_tag    = pipe.new_twopf_kconfig_tag();
             const typename std::vector<twopf_kconfig> k_values = kc_handle.lookup_tag(k_tag);
+
+            data_line_set<number> lines;
 
             // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
             for(const auto& t_value : t_values)
@@ -228,6 +230,7 @@ namespace transport
 
             // detach pipe from content group
             this->detach(pipe);
+            return lines;
           }
 
 
@@ -342,8 +345,8 @@ namespace transport
           public:
 
 		        //! generate data lines for plotting
-		        void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines, const tag_list& tags,
-                              slave_message_buffer& messages) const override;
+		        data_line_set<number> derive_lines
+		          (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 		        //! generate a LaTeX label
 		        std::string get_LaTeX_label(double t) const;
@@ -415,8 +418,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void zeta_ns_wavenumber_series<number>::derive_lines
-		      (datapipe<number>& pipe, std::list< data_line<number> >& lines, const tag_list& tags, slave_message_buffer& messages) const
+		    data_line_set<number> zeta_ns_wavenumber_series<number>::derive_lines
+		      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 			    {
 		        // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
@@ -437,6 +440,8 @@ namespace transport
 		        twopf_kconfig_tag<number>                 k_tag    = pipe.new_twopf_kconfig_tag();
 		        const typename std::vector<twopf_kconfig> k_values = kc_handle.lookup_tag(k_tag);
 
+		        data_line_set<number> lines;
+
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(const auto& t_value : t_values)
 			        {
@@ -451,6 +456,7 @@ namespace transport
 
 		        // detach pipe from content group
 		        this->detach(pipe);
+		        return lines;
 			    }
 
 
@@ -566,8 +572,8 @@ namespace transport
           public:
 
 				    //! generate data lines for plotting
-				    void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                              const tag_list& tags, slave_message_buffer& messages) const override;
+				    data_line_set<number> derive_lines
+				      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 				    //! generate a LaTeX label
 				    std::string get_LaTeX_label(double t) const;
@@ -642,8 +648,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void zeta_threepf_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-		                                                              const tag_list& tags, slave_message_buffer& messages) const
+		    data_line_set<number> zeta_threepf_wavenumber_series<number>::derive_lines
+		      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 			    {
 		        // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
@@ -663,6 +669,8 @@ namespace transport
             // pull k-configuration information from the database
             threepf_kconfig_tag<number>                 k_tag    = pipe.new_threepf_kconfig_tag();
             const typename std::vector<threepf_kconfig> k_values = kc_handle.lookup_tag(k_tag);
+
+            data_line_set<number> lines;
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(const auto& t_value : t_values)
@@ -695,6 +703,7 @@ namespace transport
 
 		        // detach pipe from content group
 		        this->detach(pipe);
+		        return lines;
 			    }
 
 
@@ -809,8 +818,8 @@ namespace transport
           public:
 
 		        //! generate data lines for plotting
-		        void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                              const tag_list& tags, slave_message_buffer& messages) const override;
+		        data_line_set<number> derive_lines
+		          (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 				    //! generate a LaTeX label
 				    std::string get_LaTeX_label(double t) const;
@@ -885,8 +894,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void zeta_reduced_bispectrum_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-		                                                                         const tag_list& tags, slave_message_buffer& messages) const
+		    data_line_set<number> zeta_reduced_bispectrum_wavenumber_series<number>::derive_lines
+		      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 			    {
 		        // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
@@ -902,6 +911,8 @@ namespace transport
 		        time_config_tag<number> t_tag = pipe.new_time_config_tag();
 		        const std::vector< time_config > t_values = tc_handle.lookup_tag(t_tag);
 
+		        data_line_set<number> lines;
+
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(const auto& t_value : t_values)
 			        {
@@ -916,6 +927,7 @@ namespace transport
 
 		        // detach pipe from content group
 		        this->detach(pipe);
+		        return lines;
 			    }
 
 

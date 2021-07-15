@@ -196,15 +196,16 @@ namespace transport
 
 		    //! Write columns of numbers; the data in ys should be stored column-wise
         template <typename number>
-        void write_formatted_data(std::string x_name, const std::vector<std::string>& columns,
-                                  const std::vector<double>& xs, const std::vector<std::vector<number> >& ys,
-                                  const std::string tag = "", asciitable_format format=asciitable_format::justified);
+        void write_formatted_data
+          (std::string x_name, const std::vector<std::string>& columns, const std::vector<double>& xs,
+           const std::vector<std::vector<number> >& ys, std::string tag = "",
+           asciitable_format format=asciitable_format::justified);
 
         //! Write columns of text; the data in table should be stored column-wise;
         //! vector of column descriptors is not marked const since the descriptors need to cache internal state
         //! while writing out the table
         void write(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
-                   const std::string tag = "", asciitable_format format=asciitable_format::justified);
+                   std::string tag = "", asciitable_format format=asciitable_format::justified);
 
 
         // LAYOUT ENGINES
@@ -213,11 +214,11 @@ namespace transport
 
         //! Justified layout
         void write_justified(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
-                             const std::string tag);
+                             std::string tag);
 
         //! CSV layout
         void write_csv(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
-                       const std::string tag, const std::string separator=",");
+                       std::string tag, std::string separator=",");
 
 
         // INTERFACE -- SET PROPERTIES
@@ -281,7 +282,7 @@ namespace transport
 
 
     void asciitable::write(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
-                           const std::string tag, asciitable_format format)
+                           std::string tag, asciitable_format format)
       {
         // determine which layout engine to use
         switch (format)
@@ -308,10 +309,11 @@ namespace transport
 
 
     void asciitable::write_justified(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
-                                     const std::string tag)
+                                     std::string tag)
       {
         assert(columns.size() == table.size());
-        if(columns.size() != table.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ASCIITABLE_INCOMPATIBLE_COLUMNS);
+        if(columns.size() != table.size())
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ASCIITABLE_INCOMPATIBLE_COLUMNS);
 
         // determine width of each column
         std::vector<size_t> widths(columns.size());
@@ -336,8 +338,8 @@ namespace transport
           }
 
         // output batches of columns, enough to fit across the display
-        size_t columns_output = 0;
-        while(columns_output < columns.size())
+        size_t c = 0;
+        while(c < columns.size())
           {
             // work out how many columns we can fit in this batch
             size_t batch_size = 0;
@@ -347,11 +349,11 @@ namespace transport
             bool batch_complete = false;
             while(!batch_complete)
               {
-                batch_width += widths[columns_output + batch_size];
-                if(table[columns_output + batch_size].size() > column_height) column_height = table[columns_output + batch_size].size();
+                batch_width += widths[c + batch_size];
+                if(table[c + batch_size].size() > column_height) column_height = table[c + batch_size].size();
                 ++batch_size;
 
-                if(columns_output + batch_size >= columns.size()) batch_complete = true;
+                if(c + batch_size >= columns.size()) batch_complete = true;
                 if(wrap_width && batch_width >= this->display_width) batch_complete = true;
               }
 
@@ -363,15 +365,15 @@ namespace transport
             // (not all columns need be the same height, however)
 
             // insert blank line if this is a continuation
-            if(columns_output > 0) this->stream << '\n';
+            if(c > 0) this->stream << '\n';
 
             // write out column headings
             for(size_t i = 0; i < batch_size; ++i)
               {
-                columns[columns_output + i].apply_format_title(this->stream, widths[columns_output + i],
-                                                               this->terminal_output, i == batch_size-1, this->arg_cache, this->env);
-                this->stream << columns[columns_output+i].get_name();
-                columns[columns_output+i].deapply_format(this->stream, this->terminal_output, this->env, this->arg_cache);
+                columns[c + i].apply_format_title(this->stream, widths[c + i],
+                                                  this->terminal_output, i == batch_size-1, this->arg_cache, this->env);
+                this->stream << columns[c + i].get_name();
+                columns[c + i].deapply_format(this->stream, this->terminal_output, this->env, this->arg_cache);
               }
             this->stream << '\n';
 
@@ -380,25 +382,26 @@ namespace transport
               {
                 for(size_t j = 0; j < batch_size; ++j)
                   {
-                    std::string entry = i < table[columns_output+j].size() ? (table[columns_output+j])[i] : "";
-                    columns[columns_output + j].apply_format(this->stream, widths[columns_output + j],
-                                                             this->terminal_output, j == batch_size-1, this->arg_cache, this->env);
+                    std::string entry = i < table[c + j].size() ? (table[c + j])[i] : "";
+                    columns[c + j].apply_format(this->stream, widths[c + j],
+                                                this->terminal_output, j == batch_size-1, this->arg_cache, this->env);
                     this->stream << entry;
-                    columns[columns_output+j].deapply_format(this->stream, this->terminal_output, this->env, this->arg_cache);
+                    columns[c + j].deapply_format(this->stream, this->terminal_output, this->env, this->arg_cache);
                   }
                 this->stream << '\n';
               }
 
-            columns_output += batch_size;
+            c += batch_size;
           }
       }
 
 
     void asciitable::write_csv(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
-                               const std::string tag, const std::string separator)
+                               std::string tag, std::string separator)
       {
         assert(columns.size() == table.size());
-        if(columns.size() != table.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ASCIITABLE_INCOMPATIBLE_COLUMNS);
+        if(columns.size() != table.size())
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ASCIITABLE_INCOMPATIBLE_COLUMNS);
 
         // write out tag if one has been given
         if(!tag.empty())
@@ -435,10 +438,9 @@ namespace transport
 
 
     template <typename number>
-    void asciitable::write_formatted_data(std::string x_name,
-                                          const std::vector<std::string>& columns, const std::vector<double>& xs,
-                                          const std::vector<std::vector<number> >& ys, const std::string tag,
-                                          asciitable_format format)
+    void asciitable::write_formatted_data
+      (std::string x_name, const std::vector<std::string>& columns, const std::vector<double>& xs,
+       const std::vector<std::vector<number> >& ys, std::string tag, asciitable_format format)
 	    {
         // format data into a set of column titles
         std::vector<column_descriptor> table_columns;
@@ -457,13 +459,13 @@ namespace transport
         for(const double x : xs)
           {
             std::ostringstream entry;
-            entry << std::scientific << std::setprecision(this->precision-1) << x;
+            entry << std::scientific << std::setprecision(this->precision > 0 ? static_cast<int>(this->precision-1) : 0) << x;
             table[current_column].push_back(entry.str());
           }
         ++current_column;
 
         // now aggregate the remaining columns
-        for(const std::vector<number>& col : ys)
+        for(const auto& col : ys)
           {
             assert(xs.size() == col.size());
 
@@ -473,11 +475,11 @@ namespace transport
 
                 if(std::isnan(y))
                   {
-                    entry << "--";
+                    entry << "NaN";
                   }
                 else
                   {
-                    entry << std::scientific << std::setprecision(this->precision-1) << y;
+                    entry << std::scientific << std::setprecision(this->precision > 0 ? static_cast<int>(this->precision-1) : 0) << y;
                   }
 
                 table[current_column].push_back(entry.str());

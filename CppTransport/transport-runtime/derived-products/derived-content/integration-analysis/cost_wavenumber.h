@@ -101,8 +101,8 @@ namespace transport
 				  public:
 
 				    //! generate data lines for plotting
-				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-				                              const tag_list& tags, slave_message_buffer& messages) const override;
+				    data_line_set<number> derive_lines
+				      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const override;
 
 				    //! generate a LaTeX label
 				    std::string get_LaTeX_label() const;
@@ -260,82 +260,84 @@ namespace transport
 
 
 		    template <typename number>
-		    void cost_wavenumber<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                                   const tag_list& tags, slave_message_buffer& messages) const
+		    data_line_set<number> cost_wavenumber<number>::derive_lines
+		      (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
 			    {
 		        // attach our datapipe to a content group
 		        std::string group = this->attach(pipe, tags);
 
+		        data_line_set<number> lines;
+
 		        // produce output if we are attached to a record with statistics
-		        // (we don't try to filter to find a content group which does have statistics,
-		        // because we want to match the same content groups as any other content producer)
-		        if(pipe.is_integration_attached())
-			        {
-		            content_group_record<integration_payload>* record = pipe.get_attached_integration_record();
+		        if(!pipe.is_integration_attached())
+		          // TODO: consider throw?
+		          return lines;
 
-		            if(record && record->get_payload().has_statistics())
-			            {
-		                // pull wavenumber axis
-		                std::vector<double> w_axis;
-				            switch(this->type)
-					            {
-				                case analysis_type::twopf:
-					                {
-						                auto* kquery_as_twopf = dynamic_cast<SQL_twopf_query*>(this->kquery.get());
-						                assert(kquery_as_twopf != nullptr);   // TODO: raise exception
-						                w_axis = this->pull_kconfig_axis(pipe, *kquery_as_twopf);
-						                break;
-					                };
+            content_group_record<integration_payload>* record = pipe.get_attached_integration_record();
+            if(!record || !record->get_payload().has_statistics())
+              // TODO: consider throw?
+              return lines;
 
-				                case analysis_type::threepf:
-					                {
-						                auto* kquery_as_threepf = dynamic_cast<SQL_threepf_query*>(this->kquery.get());
-						                assert(kquery_as_threepf != nullptr);   // TODO: raise exception
-						                w_axis = this->pull_kconfig_axis(pipe, *kquery_as_threepf);
-						                break;
-					                };
-					            }
+            // pull wavenumber axis
+            std::vector<double> w_axis;
+            switch(this->type)
+              {
+                case analysis_type::twopf:
+                  {
+                    auto* kquery_as_twopf = dynamic_cast<SQL_twopf_query*>(this->kquery.get());
+                    assert(kquery_as_twopf != nullptr);   // TODO: raise exception
+                    w_axis = this->pull_kconfig_axis(pipe, *kquery_as_twopf);
+                    break;
+                  };
 
-		                // set up cache handles
-		                typename datapipe<number>::k_statistics_handle& ks_handle = pipe.new_k_statistics_handle(*(this->kquery));
+                case analysis_type::threepf:
+                  {
+                    auto* kquery_as_threepf = dynamic_cast<SQL_threepf_query*>(this->kquery.get());
+                    assert(kquery_as_threepf != nullptr);   // TODO: raise exception
+                    w_axis = this->pull_kconfig_axis(pipe, *kquery_as_threepf);
+                    break;
+                  };
+              }
 
-		                // pull the statistics from the database
-		                k_statistics_tag<number>                     ks_tag     = pipe.new_k_statistics_tag();
-		                const std::vector<kconfiguration_statistics> statistics = ks_handle.lookup_tag(ks_tag);
+            // set up cache handles
+            typename datapipe<number>::k_statistics_handle& ks_handle = pipe.new_k_statistics_handle(*(this->kquery));
 
-		                std::vector<number> line_data;
-		                line_data.reserve(statistics.size());
-		                value_type this_value = value_type::time;
+            // pull the statistics from the database
+            k_statistics_tag<number>                     ks_tag     = pipe.new_k_statistics_tag();
+            const std::vector<kconfiguration_statistics> statistics = ks_handle.lookup_tag(ks_tag);
 
-		                for(const auto & statistic : statistics)
-			                {
-		                    switch(this->metric)
-			                    {
-		                        case cost_metric::time:
-                              {
-                                line_data.push_back(static_cast<number>(statistic.integration) / 1E9); // convert to seconds
-                                this_value = value_type::time;
-                                break;
-                              }
+            std::vector<number> line_data;
+            line_data.reserve(statistics.size());
+            value_type this_value = value_type::time;
 
-		                        case cost_metric::steps:
-                              {
-                                line_data.push_back(static_cast<number>(statistic.steps));
-                                this_value = value_type::steps;
-                                break;
-                              }
-			                    }
-			                }
+            for(const auto& statistic : statistics)
+              {
+                switch(this->metric)
+                  {
+                    case cost_metric::time:
+                      {
+                        line_data.push_back(static_cast<number>(statistic.integration) / 1E9); // convert to seconds
+                        this_value = value_type::time;
+                        break;
+                      }
 
-		                data_line<number> line(group, this->x_type, this_value, w_axis, line_data,
-		                                       this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages, this->is_spectral_index());
-				            line.set_data_line_type(data_line_type::scattered_data);
-		                lines.push_back(line);
-			            }
-			        }
+                    case cost_metric::steps:
+                      {
+                        line_data.push_back(static_cast<number>(statistic.steps));
+                        this_value = value_type::steps;
+                        break;
+                      }
+                  }
+              }
+
+            data_line<number> line(group, this->x_type, this_value, w_axis, line_data,
+                                   this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages, this->is_spectral_index());
+            line.set_data_line_type(data_line_type::scattered_data);
+            lines.push_back(line);
 
 		        // detach pipe from content group
 		        this->detach(pipe);
+		        return lines;
 			    }
 
 
