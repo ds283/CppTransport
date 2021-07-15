@@ -639,7 +639,11 @@ namespace transport
 						// using the same x-axis), so later we'll strip out any masked values this generates
 				    auto merged_lines = this->merge_lines(pipe, data_lines);
 
-						// bin these lines into groups of the same value type
+						// bin these lines into groups of the same value type, restricting to a maximum of two bins
+						// TODO: matplotlib does not seem to have a maximum of two bins; it seems that multiple calls to
+						//  twinx() are allowed, each of which generates a new y-axis with shared x-axis. So apparently there
+						//  is no bar to having more than 2 y-value types, except space on the plot for all the y-axis scales.
+						//  This means we should eventually remove this restriction on the number of bins.
 				    auto binned_lines = this->bin_lines(merged_lines, messages, 2);
 
 						// generate plot

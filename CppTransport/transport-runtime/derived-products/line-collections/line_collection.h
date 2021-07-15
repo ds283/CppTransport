@@ -342,7 +342,7 @@ namespace transport
 
             //! Bin lines according to their value type
             binned_line_set bin_lines(const merged_line_set& input, slave_message_buffer& messages,
-                                      boost::optional<unsigned int> max_bins = boost::none);
+                                      boost::optional<size_t> max_bins = boost::none);
 
 
             // DERIVED PRODUCTS -- AGGREGATE CONSTITUENT TASKS -- implements a 'derived_product' interface
@@ -753,7 +753,7 @@ namespace transport
         template <typename number>
         typename line_collection<number>::binned_line_set
         line_collection<number>::bin_lines(const merged_line_set& input, slave_message_buffer& messages,
-                                           boost::optional<unsigned int> max_bin)
+                                           boost::optional<size_t> max_bins)
           {
             // loop through available input lines
             binned_lines binned;
@@ -769,12 +769,38 @@ namespace transport
                 bin.push_back(t);
               }
 
-//            if(binned_lines.size() > 2)
-//              {
-//                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::error) << "!! line_plot2d: more than two y-value types; unplottable values have been discarded";
-//                binned_lines.resize(2);
-//                bin_types.resize(2);
-//              }
+            size_t num_bins = binned.size();
+
+            if(!max_bins || binned.size() <= *max_bins) return { input.first, std::move(binned) };
+
+            std::ostringstream msg;
+            msg << "line_collection: too many bins (" << num_bins << ") in collection; maximum allowed is " << *max_bins << ". Excess bins have been discarded.";
+            messages.push_back(msg.str());
+
+            using bin_data_type = std::pair< size_t, binned_lines::const_iterator >;
+            std::list< bin_data_type > bin_data;
+
+            for(auto t = binned.cbegin(); t != binned.cend(); ++t)
+              {
+                bin_data.emplace_back(t->second.size(), t);
+              }
+
+            struct BinSizeComparator
+              {
+                bool operator()(const bin_data_type& a, const bin_data_type& b)
+                  {
+                    return a.first < b.first;
+                  }
+              };
+
+            bin_data.sort(BinSizeComparator());
+
+            while(bin_data.size() > *max_bins)
+              {
+                const auto& item = bin_data.back();
+                binned.erase(item.second);
+                bin_data.pop_back();
+              }
 
             return { input.first, std::move(binned) };
           }
