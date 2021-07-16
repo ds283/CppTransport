@@ -450,7 +450,7 @@ namespace transport
         //!                       twopf task this is just the same as k_serial, but in a threepf task
         //!                       it will be the 3pf k-config serial number, which might generate up to three
         //!                       twopf k-configurations
-        //! \param value          vector representing flattened tensor two-point function
+        //! \param value          vector representing flattened tensor spectral two-point function
         void push_tensor_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                   const std::vector<number>& value);
 
@@ -757,7 +757,7 @@ namespace transport
         //!                       twopf task this is just the same as k_serial, but in a threepf task
         //!                       it will be the 3pf k-config serial number, which might generate up to three
         //!                       twopf k-configurations
-        //! \param value          vector representing flattened tensor two-point function
+        //! \param value          vector representing flattened tensor spectral two-point function
         void push_tensor_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                   const std::vector<number>& value);
 
@@ -1131,8 +1131,8 @@ namespace transport
         this->twopf_si_batch.emplace_back(
           std::make_unique<typename integration_items<number>::twopf_si_re_item>(
             time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
-        // TODO: push spectral index to paired zeta batcher, if one is present
-        
+        // ns is pushed to paired batcher as part of push_paired_twopf(), if needed
+
         this->check_for_flush();
       }
 
@@ -1401,7 +1401,7 @@ namespace transport
         this->twopf_si_re_batch.emplace_back(
           std::make_unique<typename integration_items<number>::twopf_si_re_item>(
             time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
-        // TODO: push spectral index to paired zeta batcher, if one is present
+        // ns is pushed to paired batcher as part of push_paired_twopf(), if needed
 
         this->check_for_flush();
       }
