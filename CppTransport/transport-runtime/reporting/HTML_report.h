@@ -275,6 +275,10 @@ namespace transport
             template <typename number>
             void write_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::threepf_line<number>& line, HTML_node& parent);
 
+            //! write details for a d/dlogk twopf line
+            template <typename number>
+            void write_dlogk_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::dlogk_twopf_line<number>& line, HTML_node& parent);
+
             //! write details for a zeta twopf line
             template <typename number>
             void write_zeta_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_line<number>& line, HTML_node& parent);
@@ -338,6 +342,10 @@ namespace transport
             template <typename number>
             void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::twopf_time_series<number>& line, HTML_node& parent);
 
+            //! write details for a d/dlogk twopf time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::dlogk_twopf_time_series<number>& line, HTML_node& parent);
+
             //! write details for a threepf time series line
             template <typename number>
             void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::threepf_time_series<number>& line, HTML_node& parent);
@@ -365,6 +373,10 @@ namespace transport
             //! write details for a zeta reduced bispectrum time series line
             template <typename number>
             void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_reduced_bispectrum_time_series<number>& line, HTML_node& parent);
+
+            //! write details for a d/dlogk twopf wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::dlogk_twopf_wavenumber_series<number>& line, HTML_node& parent);
 
             //! write details for a twopf wavenumber series line
             template <typename number>
@@ -2588,6 +2600,13 @@ namespace transport
                                 break;
                               }
 
+                            case derived_data::derived_line_type::dlogk_twopf_time:
+                              {
+                                const auto& ln = dynamic_cast< derived_data::dlogk_twopf_time_series<number>& >(*line);
+                                this->write_derived_line(bundle, ln, item);
+                                break;
+                              }
+
                             case derived_data::derived_line_type::tensor_twopf_time:
                               {
                                 const auto& ln = dynamic_cast< derived_data::tensor_twopf_time_series<number>& >(*line);
@@ -2595,7 +2614,7 @@ namespace transport
                                 break;
                               }
 
-                            case derived_data::derived_line_type::tensor_nt_time:
+                            case derived_data::derived_line_type::tensor_dlogk_twopf_time:
                               {
                                 const auto& ln = dynamic_cast< derived_data::tensor_dlogk_twopf_time_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
@@ -2637,6 +2656,13 @@ namespace transport
                                 break;
                               }
 
+                            case derived_data::derived_line_type::dlogk_twopf_wavenumber:
+                              {
+                                const auto& ln = dynamic_cast< derived_data::dlogk_twopf_wavenumber_series<number>& >(*line);
+                                this->write_derived_line(bundle, ln, item);
+                                break;
+                              }
+
                             case derived_data::derived_line_type::threepf_wavenumber:
                               {
                                 const auto& ln = dynamic_cast< derived_data::threepf_wavenumber_series<number>& >(*line);
@@ -2651,7 +2677,7 @@ namespace transport
                                 break;
                               }
 
-                            case derived_data::derived_line_type::tensor_nt_wavenumber:
+                            case derived_data::derived_line_type::tensor_dlogk_twopf_wavenumber:
                               {
                                 const auto& ln = dynamic_cast< derived_data::tensor_dlogk_twopf_wavenumber_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
@@ -2834,6 +2860,38 @@ namespace transport
 
         template <typename number>
         void HTML_report::write_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::threepf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_dlogk_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::dlogk_twopf_line<number>& line, HTML_node& parent)
           {
             HTML_node row("div");
             row.add_attribute("class", "row topskip-small");
@@ -3169,6 +3227,18 @@ namespace transport
 
 
         template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::dlogk_twopf_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("d/d(log k) 2-point function &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_dlogk_twopf_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
         void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_time_series<number>& line, HTML_node& parent)
           {
             this->derived_line_title("tensor 2-point function &mdash; time data", parent);
@@ -3260,6 +3330,19 @@ namespace transport
 
             this->write_generic_derived_line(bundle, line, parent);
             this->write_threepf_line(bundle, line, parent);
+            this->write_wavenumber_series_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::dlogk_twopf_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("2-point function &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_dlogk_twopf_line(bundle, line, parent);
             this->write_wavenumber_series_line(bundle, line, parent);
             this->write_SQL_query(bundle, line.get_k_query(), parent);
             this->write_SQL_query(bundle, line.get_time_query(), parent);

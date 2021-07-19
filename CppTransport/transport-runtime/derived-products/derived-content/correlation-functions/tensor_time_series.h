@@ -333,7 +333,7 @@ namespace transport
           public:
 
             //! get type
-            derived_line_type get_line_type() const override { return derived_line_type::tensor_nt_time; }
+            derived_line_type get_line_type() const override { return derived_line_type::tensor_dlogk_twopf_time; }
 
 
             // EXTRACT QUERIES
@@ -461,7 +461,7 @@ namespace transport
                         if(this->active_indices.is_on(index_set))
                           {
                             cf_time_data_tag<number> tag =
-                              pipe.new_cf_time_data_tag(cf_data_type::cf_tensor_nt,
+                              pipe.new_cf_time_data_tag(cf_data_type::cf_tensor_dlogk,
                                                         this->gadget.get_model()->tensor_flatten(m, n), k_value.serial);
 
                             std::vector<number> line_data = t_handle.lookup_tag(tag);

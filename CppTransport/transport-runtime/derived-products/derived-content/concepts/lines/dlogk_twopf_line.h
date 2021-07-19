@@ -1,7 +1,7 @@
 //
-// Created by David Seery on 02/06/2014.
+// Created by David Seery on 19/07/2021.
 // --@@
-// Copyright (c) 2016 University of Sussex. All rights reserved.
+// Copyright (c) 2021 University of Sussex. All rights reserved.
 //
 // This file is part of the CppTransport platform.
 //
@@ -24,8 +24,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_TWOPF_LINE_H
-#define CPPTRANSPORT_TWOPF_LINE_H
+#ifndef CPPTRANSPORT_TWOPF_DLOGK_LINE_H
+#define CPPTRANSPORT_TWOPF_DLOGK_LINE_H
 
 
 #include <iostream>
@@ -62,12 +62,9 @@ namespace transport
     namespace derived_data
 	    {
 
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT = "twopf-line-settings";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_DLOGK_TWOPF_LINE_ROOT = "dlogk-twopf-line-settings";
 
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE = "components";
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL = "real";
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY = "imaginary";
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS = "dimensionless";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_DLOGK_TWOPF_LINE_DIMENSIONLESS = "dimensionless";
 
 
 
@@ -77,7 +74,7 @@ namespace transport
 		    //! problem -- concrete classes may inherit several derived_line<> attributes,
 		    //! eg. wavenumber_series<> and twopf_line<>
 		    template <typename number>
-        class twopf_line: public virtual derived_line<number>
+        class dlogk_twopf_line: public virtual derived_line<number>
 	        {
 
           public:
@@ -85,29 +82,18 @@ namespace transport
 	          // CONSTRUCTOR, DESTRUCTOR
 
 		        //! Basic user-facing constructor
-		        twopf_line(const twopf_db_task<number>& tk, index_selector<2> sel);
+            dlogk_twopf_line(const twopf_db_task<number>& tk, index_selector<2> sel);
 
 		        //! Deserialization constructor
-		        twopf_line(Json::Value& reader, task_finder<number>& finder);
+            dlogk_twopf_line(Json::Value& reader, task_finder<number>& finder);
 
-		        virtual ~twopf_line() = default;
+            //! Destructor is default
+		        virtual ~dlogk_twopf_line() = default;
 
 
             // MANAGE SETTINGS
 
           public:
-
-            //! get twopf type setting
-            twopf_type get_type() const { return(this->twopf_meaning); }
-
-            //! set twopf type setting
-            twopf_line<number>& set_type(twopf_type m) { this->twopf_meaning = m; return *this; }
-
-            //! query type of twopf - is it real?
-            bool is_real_twopf() const { return(this->twopf_meaning == twopf_type::real); }
-
-            //! query type of twopf - is it imaginary?
-            bool is_imag_twopf() const { return(this->twopf_meaning == twopf_type::imaginary); }
 
             //! is this dimensionless?
             bool is_dimensionless() const { return(this->dimensionless); }
@@ -153,9 +139,6 @@ namespace transport
             //! record which indices are active in this group
             index_selector<2> active_indices;
 
-            //! record which type of 2pf we are plotting
-            twopf_type twopf_meaning;
-
 		        //! compute the dimensionless correlation function?
 		        bool dimensionless;
 
@@ -163,14 +146,20 @@ namespace transport
 
 
 		    template <typename number>
-		    twopf_line<number>::twopf_line(const twopf_db_task<number>& tk, index_selector<2> sel)
+        dlogk_twopf_line<number>::dlogk_twopf_line(const twopf_db_task<number>& tk, index_selector<2> sel)
 		      : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 		        gadget(tk),
 		        active_indices(sel),
-		        twopf_meaning(twopf_type::real),
 		        dimensionless(true)
 			    {
-		        if(active_indices.get_number_fields() != gadget.get_N_fields())
+            if(!tk.get_collect_spectral_data())
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_PRODUCT_TWOPF_DLOGK_LINE_NO_SPECTRAL_DATA << ": '" << tk.get_name() << "'";
+                throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
+              }
+
+            if(active_indices.get_number_fields() != gadget.get_N_fields())
 			        {
 		            std::ostringstream msg;
 		            msg << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
@@ -182,38 +171,29 @@ namespace transport
 
 
 		    template <typename number>
-		    twopf_line<number>::twopf_line(Json::Value& reader, task_finder<number>& finder)
+        dlogk_twopf_line<number>::dlogk_twopf_line(Json::Value& reader, task_finder<number>& finder)
 		      : derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
             gadget(derived_line<number>::parent_tasks), // safe, will always be constructed after derived_line<number>()
 		        active_indices(reader)
 			    {
-            const auto& root = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT];
+            const auto& root = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_DLOGK_TWOPF_LINE_ROOT];
 
-            dimensionless = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS].asBool();
-
-		        std::string tpf_type = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE].asString();
-
-		        if(tpf_type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL) twopf_meaning = twopf_type::real;
-		        else if(tpf_type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY) twopf_meaning = twopf_type::imaginary;
-		        else
-			        {
-		            std::ostringstream msg;
-		            msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_TWOPF_TYPE_UNKNOWN << " '" << tpf_type << "'";
-		            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
-			        }
+            dimensionless = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_DLOGK_TWOPF_LINE_DIMENSIONLESS].asBool();
 			    }
 
 
 		    template <typename number>
-		    std::string twopf_line<number>::make_LaTeX_label(unsigned int m, unsigned int n) const
+		    std::string dlogk_twopf_line<number>::make_LaTeX_label(unsigned int m, unsigned int n) const
 			    {
 		        std::ostringstream label;
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
+            label << CPPTRANSPORT_LATEX_DLOGK_SYMBOL << " ";
+
 				    if(this->dimensionless) label << CPPTRANSPORT_LATEX_DIMENSIONLESS_TWOPF_SYMBOL << "(";
 
-		        label << (this->twopf_meaning == twopf_type::real ? CPPTRANSPORT_LATEX_RE_SYMBOL : CPPTRANSPORT_LATEX_IM_SYMBOL) << " ";
+		        label << CPPTRANSPORT_LATEX_RE_SYMBOL << " ";
 
 		        const auto& field_names = this->gadget.get_model()->get_f_latex_names();
 
@@ -239,15 +219,17 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string twopf_line<number>::make_non_LaTeX_label(unsigned int m, unsigned int n) const
+		    std::string dlogk_twopf_line<number>::make_non_LaTeX_label(unsigned int m, unsigned int n) const
 			    {
 		        std::ostringstream label;
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
+            label << CPPTRANSPORT_NONLATEX_DLOGK_SYMBOL << " ";
+
 				    if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_DIMENSIONLESS_TWOPF_SYMBOL << "[";
 
-		        label << (this->twopf_meaning == twopf_type::real ? CPPTRANSPORT_NONLATEX_RE_SYMBOL : CPPTRANSPORT_NONLATEX_IM_SYMBOL) << " ";
+            label << CPPTRANSPORT_NONLATEX_RE_SYMBOL << " ";
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
@@ -273,29 +255,18 @@ namespace transport
 
 
 		    template <typename number>
-		    void twopf_line<number>::serialize(Json::Value& writer) const
+		    void dlogk_twopf_line<number>::serialize(Json::Value& writer) const
 			    {
 				    this->active_indices.serialize(writer);
 
-            auto& root = writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT];
+            auto& root = writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_DLOGK_TWOPF_LINE_ROOT];
 
-            switch(this->twopf_meaning)
-			        {
-                case twopf_type::real:
-                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL);
-		                break;
-
-                case twopf_type::imaginary:
-                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY);
-		                break;
-              }
-
-            root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
+            root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_DLOGK_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
 			    }
 
 
 		    template <typename number>
-		    void twopf_line<number>::write(std::ostream& out)
+		    void dlogk_twopf_line<number>::write(std::ostream& out)
 			    {
 		        out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TWOPF << '\n';
 		        out << "  " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
@@ -309,4 +280,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //CPPTRANSPORT_TWOPF_LINE_H
+#endif //CPPTRANSPORT_TWOPF_DLOGK_LINE_H

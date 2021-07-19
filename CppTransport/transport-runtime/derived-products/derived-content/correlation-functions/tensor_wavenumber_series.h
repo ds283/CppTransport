@@ -338,7 +338,7 @@ namespace transport
           public:
 
             //! get type
-            derived_line_type get_line_type() const override { return derived_line_type::tensor_nt_wavenumber; }
+            derived_line_type get_line_type() const override { return derived_line_type::tensor_dlogk_twopf_wavenumber; }
 
 
             // EXTRACT QUERIES
@@ -466,7 +466,7 @@ namespace transport
                         if(this->active_indices.is_on(index_set))
                           {
                             cf_kconfig_data_tag<number> tag =
-                              pipe.new_cf_kconfig_data_tag(cf_data_type::cf_tensor_nt,
+                              pipe.new_cf_kconfig_data_tag(cf_data_type::cf_tensor_dlogk,
                                                            this->gadget.get_model()->tensor_flatten(m,n), t_value.serial);
 
                             std::vector<number> line_data = k_handle.lookup_tag(tag);

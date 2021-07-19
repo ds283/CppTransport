@@ -1,7 +1,7 @@
 //
-// Created by David Seery on 15/12/14.
+// Created by David Seery on 02/07/2021.
 // --@@
-// Copyright (c) 2016 University of Sussex. All rights reserved.
+// Copyright (c) 2021 University of Sussex. All rights reserved.
 //
 // This file is part of the CppTransport platform.
 //
@@ -24,8 +24,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_tensor_twopf_spectral_line_H
-#define CPPTRANSPORT_tensor_twopf_spectral_line_H
+#ifndef CPPTRANSPORT_TENSOR_TWOPF_DLOGK_LINE_H
+#define CPPTRANSPORT_TENSOR_TWOPF_DLOGK_LINE_H
 
 
 #include <iostream>
@@ -62,9 +62,9 @@ namespace transport
     namespace derived_data
 	    {
 
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_ROOT = "tensor-nt-line-settings";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_TWOPF_LINE_ROOT = "tensor-dlogk-twpof-line-settings";
 
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_DIMENSIONLESS = "dimensionless";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_TWOPF_LINE_DIMENSIONLESS = "dimensionless";
 	    
 		    //! general tensor twopf spectral index content producer, suitable
 		    //! for producing content usable in eg. a 2d plot or table
@@ -85,6 +85,7 @@ namespace transport
 				    //! Deserialization constructor
 				    tensor_dlogk_twopf_line(Json::Value& reader, task_finder<number>& finder);
 
+				    //! Destructor is default
 				    virtual ~tensor_dlogk_twopf_line() = default;
 
 
@@ -152,7 +153,7 @@ namespace transport
 			      if(!tk.get_collect_spectral_data())
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_PRODUCT_TENSOR_NT_LINE_NO_SPECTRAL_DATA << ": '" << tk.get_name() << "'";
+                msg << CPPTRANSPORT_PRODUCT_TENSOR_DLOGK_TWOPF_LINE_NO_SPECTRAL_DATA << ": '" << tk.get_name() << "'";
                 throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
               }
 
@@ -173,9 +174,9 @@ namespace transport
             gadget(derived_line<number>::parent_tasks), // safe, will always be constructed after derived_line<number>()
 		        active_indices(reader)
 			    {
-			      const auto& root = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_ROOT];
+			      const auto& root = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_TWOPF_LINE_ROOT];
 
-			      dimensionless = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_DIMENSIONLESS].asBool();
+			      dimensionless = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_TWOPF_LINE_DIMENSIONLESS].asBool();
 			    }
 
 
@@ -194,7 +195,9 @@ namespace transport
 		        std::ostringstream label;
 		        label << std::setprecision(this->precision);
 
-		        label << CPPTRANSPORT_LATEX_DLOGK_SYMBOL << "(";
+		        label << CPPTRANSPORT_LATEX_DLOGK_SYMBOL << " ";
+
+		        if(this-dimensionless) label << CPPTRANSPORT_LATEX_DIMENSIONLESS_TWOPF_SYMBOL << "(";
 
 		        if(m == 0)      label << CPPTRANSPORT_LATEX_TENSOR_SYMBOL;
 		        else if(m == 1) label << CPPTRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL;
@@ -204,7 +207,7 @@ namespace transport
 				    if(n == 0)      label << CPPTRANSPORT_LATEX_TENSOR_SYMBOL;
 				    else if(n == 1) label << CPPTRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL;
 
-				    label << ")";
+				    if(this->dimensionless) label << ")";
 
 				    return(label.str());
 			    }
@@ -227,7 +230,7 @@ namespace transport
 
             label << CPPTRANSPORT_NONLATEX_DLOGK_SYMBOL << " ";
 
-            if(this->dimensionless) label << CPPTRANSPORT_LATEX_DIMENSIONLESS_TWOPF_SYMBOL << "(";
+            if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_DIMENSIONLESS_TWOPF_SYMBOL << "[";
 
             if(m == 0)      label << CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL;
             else if(m == 1) label << CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL;
@@ -237,7 +240,7 @@ namespace transport
             if(n == 0)      label << CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL;
             else if(n == 1) label << CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL;
 
-            if(this->dimensionless) label << ")";
+            if(this->dimensionless) label << "]";
 
             return(label.str());
 	        }
@@ -248,8 +251,8 @@ namespace transport
 			    {
 				    this->active_indices.serialize(writer);
 
-				    auto& root = writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_ROOT];
-				    root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_DIMENSIONLESS] = this->dimensionless;
+				    auto& root = writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_TWOPF_LINE_ROOT];
+				    root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
 			    }
 
 
@@ -267,4 +270,4 @@ namespace transport
 	    }
 	}
 
-#endif //CPPTRANSPORT_tensor_twopf_spectral_line_H
+#endif //CPPTRANSPORT_TENSOR_TWOPF_DLOGK_LINE_H

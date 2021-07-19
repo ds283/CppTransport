@@ -37,6 +37,7 @@ namespace transport
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_BACKGROUND               = "background line group";
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TWOPF                    = "twopf line group";
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_THREEPF                  = "threepf line group";
+        constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TWOPF_SPECTRAL           = "twopf spectral line group";
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TENSOR_TWOPF             = "tensor twopf line group";
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TENSOR_TWOPF_SPECTRAL    = "tensor twopf spectral line group";
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF               = "zeta twopf line group";

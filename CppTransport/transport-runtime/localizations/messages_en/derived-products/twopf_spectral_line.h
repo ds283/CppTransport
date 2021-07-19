@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_MESSAGES_EN_TENSOR_TWOPF_SPECTRAL_LINE_PRODUCT_H
-#define CPPTRANSPORT_MESSAGES_EN_TENSOR_TWOPF_SPECTRAL_LINE_PRODUCT_H
+#ifndef CPPTRANSPORT_MESSAGES_EN_TWOPF_SPECTRAL_LINE_PRODUCT_H
+#define CPPTRANSPORT_MESSAGES_EN_TWOPF_SPECTRAL_LINE_PRODUCT_H
 
 
 namespace transport
@@ -33,10 +33,10 @@ namespace transport
     namespace derived_data
       {
 
-        constexpr auto CPPTRANSPORT_PRODUCT_TENSOR_DLOGK_TWOPF_LINE_NO_SPECTRAL_DATA = "tensor_dlogk_twopf_line error: provided task does not collect spectral data for 2pf";
+        constexpr auto CPPTRANSPORT_PRODUCT_TWOPF_DLOGK_LINE_NO_SPECTRAL_DATA = "dlogk_twopf_line error: provided task does not collect spectral data for 2pf";
 
       }   // namespace derived_data
 
   }   // namespace transport
 
-#endif //CPPTRANSPORT_MESSAGES_EN_TENSOR_TWOPF_SPECTRAL_LINE_PRODUCT_H
+#endif //CPPTRANSPORT_MESSAGES_EN_TWOPF_SPECTRAL_LINE_PRODUCT_H

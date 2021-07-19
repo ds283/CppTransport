@@ -213,7 +213,7 @@ namespace transport
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
-		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
+		        const auto& field_names = this->gadget.get_model()->get_f_latex_names();
 
             if(this->dimensionless) label << CPPTRANSPORT_LATEX_SHAPE_FACTOR << " ";
 

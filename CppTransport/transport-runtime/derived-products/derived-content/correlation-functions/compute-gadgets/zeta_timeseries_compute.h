@@ -279,7 +279,7 @@ namespace transport
                       {
                         // pull twopf 'spectral index' data from the datapipe for this (m,n) element
                         cf_time_data_tag<number> tpf_si_tag =
-                          h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_si_re, h.mdl->flatten(m, n), k.serial);
+                          h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_dlogk_re, h.mdl->flatten(m, n), k.serial);
                         
                         const std::vector<number>& si_line = h.t_handle.lookup_tag(tpf_si_tag);
                         
