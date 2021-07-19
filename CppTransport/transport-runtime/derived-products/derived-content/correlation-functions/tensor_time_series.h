@@ -211,18 +211,18 @@ namespace transport
                             value_type value;
                             if(this->dimensionless)
                               {
-                                for(unsigned int j = 0; j < line_data.size(); ++j)
+                                for(auto l_pos = line_data.begin(); l_pos != line_data.end() ; ++l_pos)
                                   {
-                                    line_data[j] *= 1.0 / (2.0*M_PI*M_PI);
+                                    *l_pos *= 1.0 / (2.0*M_PI*M_PI);
                                   }
                                 value = value_type::dimensionless;
                               }
                             else
                               {
                                 double k_cube = k_value.k_comoving * k_value.k_comoving * k_value.k_comoving;
-                                for(unsigned int j = 0; j < line_data.size(); ++j)
+                                for(auto l_pos = line_data.begin(); l_pos != line_data.end() ; ++l_pos)
                                   {
-                                    line_data[j] *= 1.0 / k_cube;
+                                    *l_pos *= 1.0 / k_cube;
                                   }
                                 value = value_type::correlation_function;
                               }
@@ -461,7 +461,7 @@ namespace transport
                         if(this->active_indices.is_on(index_set))
                           {
                             cf_time_data_tag<number> tag =
-                              pipe.new_cf_time_data_tag(cf_data_type::cf_tensor_dlogk,
+                              pipe.new_cf_time_data_tag(cf_data_type::cf_tensor_twopf_dlogk,
                                                         this->gadget.get_model()->tensor_flatten(m, n), k_value.serial);
 
                             std::vector<number> line_data = t_handle.lookup_tag(tag);
@@ -469,18 +469,18 @@ namespace transport
                             value_type value;
                             if(this->dimensionless)
                               {
-                                for(unsigned int j = 0; j < line_data.size(); ++j)
+                                for(auto l_pos = line_data.begin(); l_pos != line_data.end() ; ++l_pos)
                                   {
-                                    line_data[j] *= 1.0 / (2.0 * M_PI * M_PI);
+                                    *l_pos *= 1.0 / (2.0*M_PI*M_PI);
                                   }
                                 value = value_type::dimensionless;
                               }
                             else
                               {
                                 double k_cube = k_value.k_comoving * k_value.k_comoving * k_value.k_comoving;
-                                for(unsigned int j = 0; j < line_data.size(); ++j)
+                                for(auto l_pos = line_data.begin(); l_pos != line_data.end() ; ++l_pos)
                                   {
-                                    line_data[j] *= 1.0 / k_cube;
+                                    *l_pos *= 1.0 / k_cube;
                                   }
                                 value = value_type::correlation_function;
                               }

@@ -121,6 +121,10 @@ namespace transport
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_NS_WAVENUMBER_SERIES           = "zeta-twopf-ns-k-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES            = "zeta-threepf-k-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_WAVENUMBER_SERIES = "zeta-reduced-bispectrum-k-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PTENSOR_TIME_SERIES                       = "Ptensor-time-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PTENSOR_NT_TIME_SERIES                    = "Ptensor-nt-time-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PTENSOR_WAVENUMBER_SERIES                 = "Ptensor-wavenumber-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PTENSOR_NT_WAVENUMBER_SERIES              = "Ptensor-nt-wavenumber-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES                           = "fNL-time-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES                             = "r-time-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES                       = "r-k-series";

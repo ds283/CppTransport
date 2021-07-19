@@ -158,7 +158,7 @@ namespace transport
 				template <typename number>
 				void zeta_ns_line<number>::write(std::ostream& out)
 					{
-				    out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF_SPECTRAL << '\n';
+				    out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF_NS << '\n';
 					}
 
 			}   // namespace derived_data

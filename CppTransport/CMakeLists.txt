@@ -895,6 +895,8 @@ SET(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES
   transport-runtime/derived-products/derived-content/concepts/lines/r_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/tensor_twopf_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/tensor_dlogk_twopf_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/Ptensor_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/Ptensor_nt_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/threepf_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/twopf_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/dlogk_twopf_line.h
@@ -926,6 +928,8 @@ SET(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_FIL
   transport-runtime/derived-products/derived-content/correlation-functions/tensor_wavenumber_series.h
   transport-runtime/derived-products/derived-content/correlation-functions/zeta_time_series.h
   transport-runtime/derived-products/derived-content/correlation-functions/zeta_wavenumber_series.h
+  transport-runtime/derived-products/derived-content/correlation-functions/Ptensor_time_series.h
+  transport-runtime/derived-products/derived-content/correlation-functions/Ptensor_wavenumber_series.h
   )
 
 SET(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_DEPRECATED_FILES

@@ -43,6 +43,8 @@
 #include "transport-runtime/derived-products/derived-content/correlation-functions/zeta_time_series.h"
 #include "transport-runtime/derived-products/derived-content/correlation-functions/field_wavenumber_series.h"
 #include "transport-runtime/derived-products/derived-content/correlation-functions/zeta_wavenumber_series.h"
+#include "transport-runtime/derived-products/derived-content/correlation-functions/Ptensor_time_series.h"
+#include "transport-runtime/derived-products/derived-content/correlation-functions/Ptensor_wavenumber_series.h"
 #include "transport-runtime/derived-products/derived-content/correlation-functions/fNL_time_series.h"
 #include "transport-runtime/derived-products/derived-content/correlation-functions/r_time_series.h"
 #include "transport-runtime/derived-products/derived-content/correlation-functions/r_wavenumber_series.h"
@@ -90,6 +92,10 @@ namespace transport
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_NS_WAVENUMBER_SERIES)           return std::make_unique< zeta_ns_wavenumber_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES)            return std::make_unique< zeta_threepf_wavenumber_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_WAVENUMBER_SERIES) return std::make_unique< zeta_reduced_bispectrum_wavenumber_series<number> >(reader, finder);
+                    else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PTENSOR_TIME_SERIES)                       return std::make_unique< Ptensor_time_series<number> >(reader, finder);
+                    else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PTENSOR_NT_TIME_SERIES)                    return std::make_unique< Ptensor_nt_time_series<number> >(reader, finder);
+                    else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PTENSOR_WAVENUMBER_SERIES)                 return std::make_unique< Ptensor_wavenumber_series<number> >(reader, finder);
+                    else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PTENSOR_NT_WAVENUMBER_SERIES)              return std::make_unique< Ptensor_nt_wavenumber_series<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES)                           return std::make_unique< fNL_time_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES)                             return std::make_unique< r_time_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES)                       return std::make_unique< r_wavenumber_series<number> >(reader, finder);

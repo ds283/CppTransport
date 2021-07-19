@@ -40,8 +40,10 @@ namespace transport
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TWOPF_SPECTRAL           = "twopf spectral line group";
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TENSOR_TWOPF             = "tensor twopf line group";
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TENSOR_TWOPF_SPECTRAL    = "tensor twopf spectral line group";
-        constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF               = "zeta twopf line group";
-        constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF_SPECTRAL      = "zeta twopf spectral line group";
+        constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_PTENSOR                  = "tensor power spectrum line group";
+        constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_PTENSOR_NT               = "tensor nt line group";
+        constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF               = "zeta power spectrum line group";
+        constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF_NS            = "zeta ns line group";
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_THREEPF             = "zeta threepf line group";
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_REDUCED_BISPECTRUM       = "reduced bispectrum line group";
         constexpr auto CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_R                        = "tensor-to-scalar ratio line group";

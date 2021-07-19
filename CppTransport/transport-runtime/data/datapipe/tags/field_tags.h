@@ -60,7 +60,7 @@ namespace transport
         cf_threepf_momentum,
         cf_threepf_Nderiv,
         cf_tensor_twopf,
-        cf_tensor_dlogk
+        cf_tensor_twopf_dlogk
       };
 
 
@@ -360,7 +360,7 @@ namespace transport
                 break;
               }
 
-            case cf_data_type::cf_tensor_dlogk:
+            case cf_data_type::cf_tensor_twopf_dlogk:
               {
                 msg << "tensor twopf 'spectral index' (time series)";
                 break;
@@ -415,7 +415,7 @@ namespace transport
                 break;
               }
 
-            case cf_data_type::cf_tensor_dlogk:
+            case cf_data_type::cf_tensor_twopf_dlogk:
               {
                 msg << "tensor twopf 'spectral index' (kconfig series)";
                 break;
@@ -517,7 +517,7 @@ namespace transport
                 break;
               }
 
-            case cf_data_type::cf_tensor_dlogk:
+            case cf_data_type::cf_tensor_twopf_dlogk:
               {
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
                 BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL tensor twopf 'spectral index' time sample request for element " << this->id << ", k-configuration " << this->kserial;
@@ -605,7 +605,7 @@ namespace transport
                 break;
               }
 
-            case cf_data_type::cf_tensor_dlogk:
+            case cf_data_type::cf_tensor_twopf_dlogk:
               {
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
                 BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL tensor twopf 'spectral index' kconfig sample request for element " << this->id << ", t-serial " << this->tserial;

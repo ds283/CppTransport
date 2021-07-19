@@ -127,8 +127,11 @@ namespace transport
     constexpr auto CPPTRANSPORT_LATEX_PZETA_NS_SYMBOL                    = "n_s";
     constexpr auto CPPTRANSPORT_NONLATEX_PZETA_NS_SYMBOL                 = "n_s";
 
-    constexpr auto CPPTRANSPORT_LATEX_TENSOR_NT_SYMBOL                   = "n_t";
-    constexpr auto CPPTRANSPORT_NONLATEX_TENSOR_NT_SYMBOL                = "n_t";
+    constexpr auto CPPTRANSPORT_LATEX_PTENSOR_SYMBOL                     = R"(\mathcal{P}_h)";
+    constexpr auto CPPTRANSPORT_NONLATEX_PTENSOR_SYMBOL                  = "cal(P)_h";
+
+    constexpr auto CPPTRANSPORT_LATEX_PTENSOR_NT_SYMBOL                   = "n_t";
+    constexpr auto CPPTRANSPORT_NONLATEX_PTENSOR_NT_SYMBOL                = "n_t";
 
     constexpr auto CPPTRANSPORT_LATEX_DLOGK_SYMBOL                       = R"(\mathrm{d}/\mathrm{d}\ln k)";
     constexpr auto CPPTRANSPORT_NONLATEX_DLOGK_SYMBOL                    = "(d/d ln k)";

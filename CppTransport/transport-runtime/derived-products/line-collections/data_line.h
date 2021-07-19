@@ -363,7 +363,7 @@ namespace transport
             data_storage_type what = is_spectral ? data_storage_type::spectral_index
                                                  : data_storage_type::raw;
 
-            value_type type = is_spectral ? vt : value_type::spectral_index;
+            value_type type = is_spectral ? value_type::spectral_index : vt;
 
             if(is_spectral)
               {

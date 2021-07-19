@@ -205,7 +205,6 @@ namespace transport
 										          pipe.new_cf_kconfig_data_tag(cf_data_type::cf_tensor_twopf,
                                                            this->gadget.get_model()->tensor_flatten(m,n), t_value.serial);
 
-										        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 										        std::vector<number> line_data = k_handle.lookup_tag(tag);
                             assert(line_data.size() == k_values.size());
 
@@ -466,7 +465,7 @@ namespace transport
                         if(this->active_indices.is_on(index_set))
                           {
                             cf_kconfig_data_tag<number> tag =
-                              pipe.new_cf_kconfig_data_tag(cf_data_type::cf_tensor_dlogk,
+                              pipe.new_cf_kconfig_data_tag(cf_data_type::cf_tensor_twopf_dlogk,
                                                            this->gadget.get_model()->tensor_flatten(m,n), t_value.serial);
 
                             std::vector<number> line_data = k_handle.lookup_tag(tag);

@@ -301,7 +301,15 @@ namespace transport
 
             //! write details for a tensor twopf spectral index line
             template <typename number>
-            void write_tensor_nt_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_dlogk_twopf_line<number>& line, HTML_node& parent);
+            void write_tensor_dlogk_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_dlogk_twopf_line<number>& line, HTML_node& parent);
+
+            //! write details for a Ptensor line
+            template <typename number>
+            void write_Ptensor_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_line<number>& line, HTML_node& parent);
+
+            //! write details for a Ptensor nt line
+            template <typename number>
+            void write_Ptensor_nt_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_nt_line<number>& line, HTML_node& parent);
 
             //! write details for an fNL line
             template <typename number>
@@ -409,6 +417,22 @@ namespace transport
             //! write details for a zeta reduced bispectrum wavenumber series line
             template <typename number>
             void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_reduced_bispectrum_wavenumber_series<number>& line, HTML_node& parent);
+
+            //! write details for a Ptensor time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_time_series<number>& line, HTML_node& parent);
+
+            //! write details for a Ptensor nt time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_nt_time_series<number>& line, HTML_node& parent);
+
+            //! write details for a Ptensor wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_wavenumber_series<number>& line, HTML_node& parent);
+
+            //! write details for a Ptensor nt wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_nt_wavenumber_series<number>& line, HTML_node& parent);
 
             //! write details for an fNL time series line
             template <typename number>
@@ -2712,6 +2736,34 @@ namespace transport
                                 break;
                               }
 
+                            case derived_data::derived_line_type::Ptensor_time:
+                              {
+                                const auto& ln = dynamic_cast< derived_data::Ptensor_time_series<number>& >(*line);
+                                this->write_derived_line(bundle, ln, item);
+                                break;
+                              }
+
+                            case derived_data::derived_line_type::Ptensor_nt_time:
+                              {
+                                const auto& ln = dynamic_cast< derived_data::Ptensor_nt_time_series<number>& >(*line);
+                                this->write_derived_line(bundle, ln, item);
+                                break;
+                              }
+
+                            case derived_data::derived_line_type::Ptensor_wavenumber:
+                              {
+                                const auto& ln = dynamic_cast< derived_data::Ptensor_wavenumber_series<number>& >(*line);
+                                this->write_derived_line(bundle, ln, item);
+                                break;
+                              }
+
+                            case derived_data::derived_line_type::Ptensor_nt_wavenumber:
+                              {
+                                const auto& ln = dynamic_cast< derived_data::Ptensor_nt_wavenumber_series<number>& >(*line);
+                                this->write_derived_line(bundle, ln, item);
+                                break;
+                              }
+
                             case derived_data::derived_line_type::fNL_time:
                               {
                                 const auto& ln = dynamic_cast< derived_data::fNL_time_series<number>& >(*line);
@@ -3033,7 +3085,71 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_tensor_nt_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_dlogk_twopf_line<number>& line, HTML_node& parent)
+        void HTML_report::write_tensor_dlogk_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_dlogk_twopf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_Ptensor_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_Ptensor_nt_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_nt_line<number>& line, HTML_node& parent)
           {
             // not currently used
           }
@@ -3256,7 +3372,7 @@ namespace transport
             this->derived_line_title("tensor 2-point function spectral index &mdash; time data", parent);
 
             this->write_generic_derived_line(bundle, line, parent);
-            this->write_tensor_nt_line(bundle, line, parent);
+            this->write_tensor_dlogk_twopf_line(bundle, line, parent);
             this->write_SQL_query(bundle, line.get_time_query(), parent);
             this->write_SQL_query(bundle, line.get_k_query(), parent);
           }
@@ -3368,7 +3484,7 @@ namespace transport
             this->derived_line_title("tensor 2-point function spectral index &mdash; momentum-configuration data", parent);
 
             this->write_generic_derived_line(bundle, line, parent);
-            this->write_tensor_nt_line(bundle, line, parent);
+            this->write_tensor_dlogk_twopf_line(bundle, line, parent);
             this->write_wavenumber_series_line(bundle, line, parent);
             this->write_SQL_query(bundle, line.get_k_query(), parent);
             this->write_SQL_query(bundle, line.get_time_query(), parent);
@@ -3421,6 +3537,56 @@ namespace transport
 
             this->write_generic_derived_line(bundle, line, parent);
             this->write_zeta_redbsp_line(bundle, line, parent);
+            this->write_wavenumber_series_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("Ptensor &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_Ptensor_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_nt_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("Ptensor nt &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_Ptensor_nt_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("Ptensor &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_Ptensor_line(bundle, line, parent);
+            this->write_wavenumber_series_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::Ptensor_nt_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("Ptensor nt &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_Ptensor_nt_line(bundle, line, parent);
             this->write_wavenumber_series_line(bundle, line, parent);
             this->write_SQL_query(bundle, line.get_k_query(), parent);
             this->write_SQL_query(bundle, line.get_time_query(), parent);
