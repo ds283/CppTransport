@@ -215,7 +215,7 @@ namespace transport
                               {
                                 auto l_pos = line_data.begin();
                                 auto k_pos = k_values.cbegin();
-                                for(; l_pos != line_data.cend() && k_pos != k_values.cend(); ++l_pos, ++k_pos)
+                                for(; l_pos != line_data.end() && k_pos != k_values.cend(); ++l_pos, ++k_pos)
                                   {
                                     *l_pos *= 1.0 / (2.0 * M_PI * M_PI);
                                   }
@@ -225,9 +225,9 @@ namespace transport
                               {
                                 auto l_pos = line_data.begin();
                                 auto k_pos = k_values.cbegin();
+                                double k_cube = k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving;
                                 for(; l_pos != line_data.cend() && k_pos != k_values.cend(); ++l_pos, ++k_pos)
                                   {
-                                    double k_cube = k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving;
                                     *l_pos *= 1.0 / k_cube;
                                   }
                                 value = value_type::correlation_function;

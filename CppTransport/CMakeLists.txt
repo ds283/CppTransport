@@ -894,7 +894,7 @@ SET(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES
   transport-runtime/derived-products/derived-content/concepts/lines/fNL_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/r_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/tensor_twopf_line.h
-  transport-runtime/derived-products/derived-content/concepts/lines/tensor_nt_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/tensor_dlogk_twopf_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/threepf_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/twopf_line.h
   transport-runtime/derived-products/derived-content/concepts/lines/zeta_reduced_bispectrum_line.h

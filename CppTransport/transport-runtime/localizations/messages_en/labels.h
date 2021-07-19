@@ -112,8 +112,8 @@ namespace transport
 
     constexpr auto CPPTRANSPORT_LATEX_ZETA_SYMBOL                        = R"(\zeta)";
     constexpr auto CPPTRANSPORT_NONLATEX_ZETA_SYMBOL                     = "zeta";
-    constexpr auto CPPTRANSPORT_LATEX_TENSOR_SYMBOL                      = "h";
-    constexpr auto CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL                   = "h";
+    constexpr auto CPPTRANSPORT_LATEX_TENSOR_SYMBOL                      = R"(h_{+,\times})";
+    constexpr auto CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL                   = "h(+,*)";
     constexpr auto CPPTRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL             = R"(\dot{h})";
     constexpr auto CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL          = "dot(h)";
     constexpr auto CPPTRANSPORT_LATEX_R_SYMBOL                           = "r";
@@ -126,8 +126,12 @@ namespace transport
 
     constexpr auto CPPTRANSPORT_LATEX_PZETA_NS_SYMBOL                    = "n_s";
     constexpr auto CPPTRANSPORT_NONLATEX_PZETA_NS_SYMBOL                 = "n_s";
+
     constexpr auto CPPTRANSPORT_LATEX_TENSOR_NT_SYMBOL                   = "n_t";
     constexpr auto CPPTRANSPORT_NONLATEX_TENSOR_NT_SYMBOL                = "n_t";
+
+    constexpr auto CPPTRANSPORT_LATEX_DLOGK_SYMBOL                       = R"(\mathrm{d}/\mathrm{d}\ln k)";
+    constexpr auto CPPTRANSPORT_NONLATEX_DLOGK_SYMBOL                    = "(d/d ln k)";
 
     constexpr auto CPPTRANSPORT_LATEX_SPECTRAL_INDEX                     = "(spectral index)";
     constexpr auto CPPTRANSPORT_NONLATEX_SPECTRAL_INDEX                  = "(spectral index)";

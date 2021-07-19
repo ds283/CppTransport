@@ -33,7 +33,7 @@ namespace transport
     namespace derived_data
       {
 
-        constexpr auto CPPTRANSPORT_PRODUCT_TENSOR_NT_LINE_NO_SPECTRAL_DATA = "tensor_nt_line error: provided task does not collect spectral data for 2pf";
+        constexpr auto CPPTRANSPORT_PRODUCT_TENSOR_NT_LINE_NO_SPECTRAL_DATA = "tensor_dlogk_twopf_line error: provided task does not collect spectral data for 2pf";
 
       }   // namespace derived_data
 

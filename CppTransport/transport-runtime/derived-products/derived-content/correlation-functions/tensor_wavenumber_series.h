@@ -315,7 +315,7 @@ namespace transport
 
         //! tensor two-point spectral index wavenumber data line
         template <typename number=default_number_type>
-        class tensor_nt_wavenumber_series: public wavenumber_series<number>, public tensor_nt_line<number>
+        class tensor_dlogk_twopf_wavenumber_series: public wavenumber_series<number>, public tensor_dlogk_twopf_line<number>
           {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -323,14 +323,14 @@ namespace transport
           public:
 
             //! construct a tensor twopf wavenumber-series object
-            tensor_nt_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2> sel,
-                                        SQL_time_query tq, SQL_twopf_query kq,
-                                        unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
+            tensor_dlogk_twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2> sel,
+                                                 SQL_time_query tq, SQL_twopf_query kq,
+                                                 unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
-            tensor_nt_wavenumber_series(Json::Value& reader, task_finder<number>& finder);
+            tensor_dlogk_twopf_wavenumber_series(Json::Value& reader, task_finder<number>& finder);
 
-            virtual ~tensor_nt_wavenumber_series() = default;
+            virtual ~tensor_dlogk_twopf_wavenumber_series() = default;
 
 
             // TYPE INTROSPECTION
@@ -370,7 +370,7 @@ namespace transport
             // CLONE
 
             //! self-replicate
-            tensor_nt_wavenumber_series<number>* clone() const override { return new tensor_nt_wavenumber_series<number>(static_cast<const tensor_nt_wavenumber_series<number>&>(*this)); }
+            tensor_dlogk_twopf_wavenumber_series<number>* clone() const override { return new tensor_dlogk_twopf_wavenumber_series<number>(static_cast<const tensor_dlogk_twopf_wavenumber_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -404,11 +404,11 @@ namespace transport
         // derived_line<> is not called automatically during construction of time_series<>.
         // We have to call it ourselves
         template <typename number>
-        tensor_nt_wavenumber_series<number>::tensor_nt_wavenumber_series
+        tensor_dlogk_twopf_wavenumber_series<number>::tensor_dlogk_twopf_wavenumber_series
           (const twopf_db_task<number>& tk, index_selector<2> sel, SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
           : derived_line<number>(make_derivable_task_set_element(tk, false, false, true),
                                  axis_class::wavenumber, { axis_value::k, axis_value::efolds_exit }, prec),
-            tensor_nt_line<number>(tk, sel),
+            tensor_dlogk_twopf_line<number>(tk, sel),
             wavenumber_series<number>(tk),
             tquery(tq),
             kquery(kq)
@@ -420,9 +420,9 @@ namespace transport
         // derived_line<> is not called automatically during construction of time_series<>.
         // We have to call it ourselves
         template <typename number>
-        tensor_nt_wavenumber_series<number>::tensor_nt_wavenumber_series(Json::Value& reader, task_finder<number>& finder)
+        tensor_dlogk_twopf_wavenumber_series<number>::tensor_dlogk_twopf_wavenumber_series(Json::Value& reader, task_finder<number>& finder)
           : derived_line<number>(reader, finder),
-            tensor_nt_line<number>(reader, finder),
+            tensor_dlogk_twopf_line<number>(reader, finder),
             wavenumber_series<number>(reader),
             tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
             kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
@@ -431,7 +431,7 @@ namespace transport
 
 
         template <typename number>
-        data_line_set<number> tensor_nt_wavenumber_series<number>::derive_lines
+        data_line_set<number> tensor_dlogk_twopf_wavenumber_series<number>::derive_lines
           (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
           {
             // attach our datapipe to a content group
@@ -469,11 +469,33 @@ namespace transport
                               pipe.new_cf_kconfig_data_tag(cf_data_type::cf_tensor_nt,
                                                            this->gadget.get_model()->tensor_flatten(m,n), t_value.serial);
 
-                            // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                             std::vector<number> line_data = k_handle.lookup_tag(tag);
                             assert(line_data.size() == k_values.size());
 
-                            wavenumber_data_line_factory(*this, lines, group, this->x_type, value_type::spectral_index,
+                            value_type value;
+                            if(this->dimensionless)
+                              {
+                                auto l_pos = line_data.begin();
+                                auto k_pos = k_values.cbegin();
+                                for(; l_pos != line_data.end() && k_pos != k_values.cend(); ++l_pos, ++k_pos)
+                                  {
+                                    *l_pos *= 1.0 / (2.0 * M_PI * M_PI);
+                                  }
+                                value = value_type::dimensionless;
+                              }
+                            else
+                              {
+                                auto l_pos = line_data.begin();
+                                auto k_pos = k_values.cbegin();
+                                double k_cube = k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving;
+                                for(; l_pos != line_data.end() && k_pos != k_values.cend(); ++l_pos, ++k_pos)
+                                  {
+                                    *l_pos *= 1.0 / k_cube;
+                                  }
+                                value = value_type::correlation_function;
+                              }
+
+                            wavenumber_data_line_factory(*this, lines, group, this->x_type, value,
                                                          w_axis, line_data, this->get_LaTeX_label(m, n, t_value.t),
                                                          this->get_non_LaTeX_label(m, n, t_value.t), messages);
                           }
@@ -488,7 +510,7 @@ namespace transport
 
 
         template <typename number>
-        std::string tensor_nt_wavenumber_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, double t) const
+        std::string tensor_dlogk_twopf_wavenumber_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, double t) const
           {
             std::string tag = this->make_LaTeX_tag(t);
             std::string label;
@@ -508,7 +530,7 @@ namespace transport
 
 
         template <typename number>
-        std::string tensor_nt_wavenumber_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, double t) const
+        std::string tensor_dlogk_twopf_wavenumber_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, double t) const
           {
             std::string tag = this->make_non_LaTeX_tag(t);
             std::string label;
@@ -530,9 +552,9 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the write method for
         // derived_line<> is not called from time_series<>. We have to call it for ourselves.
         template <typename number>
-        void tensor_nt_wavenumber_series<number>::write(std::ostream& out)
+        void tensor_dlogk_twopf_wavenumber_series<number>::write(std::ostream& out)
           {
-            this->tensor_nt_line<number>::write(out);
+            this->tensor_dlogk_twopf_line<number>::write(out);
             this->wavenumber_series<number>::write(out);
             this->derived_line<number>::write(out);
           }
@@ -541,15 +563,15 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the serialize method for
         // derived_line<> is not called from time_series<>. We have to call it for ourselves.
         template <typename number>
-        void tensor_nt_wavenumber_series<number>::serialize(Json::Value& writer) const
+        void tensor_dlogk_twopf_wavenumber_series<number>::serialize(Json::Value& writer) const
           {
-            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_NT_WAVENUMBER_SERIES);
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_DLOGK_WAVENUMBER_SERIES);
 
             this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
             this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
-            this->tensor_nt_line<number>::serialize(writer);
+            this->tensor_dlogk_twopf_line<number>::serialize(writer);
             this->wavenumber_series<number>::serialize(writer);
           }
 

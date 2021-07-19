@@ -62,16 +62,17 @@ namespace transport
     namespace derived_data
 	    {
 
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_NT_LINE_ROOT = "tensor-nt-line-settings";
-	    
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_ROOT = "tensor-nt-line-settings";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_DIMENSIONLESS = "dimensionless";
 	    
 		    //! general tensor twopf spectral index content producer, suitable
 		    //! for producing content usable in eg. a 2d plot or table
 		    //! Note that we derive virtually from derived_line<> to solve the diamond
 		    //! problem -- concrete classes may inherit several derived_line<> attributes,
-		    //! eg. wavenumber_series<> and tensor_nt_line<>
+		    //! eg. wavenumber_series<> and tensor_dlogk_twopf_line<>
 		    template <typename number>
-		    class tensor_nt_line: public virtual derived_line<number>
+		    class tensor_dlogk_twopf_line: public virtual derived_line<number>
 			    {
 
 			      // CONSTRUCTOR, DESTRUCTOR
@@ -79,12 +80,23 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    tensor_nt_line(const twopf_db_task<number>& tk, index_selector<2> sel);
+				    tensor_dlogk_twopf_line(const twopf_db_task<number>& tk, index_selector<2> sel);
 
 				    //! Deserialization constructor
-				    tensor_nt_line(Json::Value& reader, task_finder<number>& finder);
+				    tensor_dlogk_twopf_line(Json::Value& reader, task_finder<number>& finder);
 
-				    virtual ~tensor_nt_line() = default;
+				    virtual ~tensor_dlogk_twopf_line() = default;
+
+
+				    // MANAGE SETTINGS
+
+			    public:
+
+            //! is this dimensionless?
+            bool is_dimensionless() const { return(this->dimensionless); }
+
+            //! set dimensionless
+            tensor_dlogk_twopf_line<number>& set_dimensionless(bool g) { this->dimensionless = g; return *this; }
 
 
 				    // LABELLING SERVICES
@@ -124,14 +136,18 @@ namespace transport
 				    //! record which indices are active in this group
 				    index_selector<2> active_indices;
 
+            //! compute the dimensionless correlation function?
+            bool dimensionless;
+
 			    };
 
 
 		    template <typename number>
-		    tensor_nt_line<number>::tensor_nt_line(const twopf_db_task<number>& tk, index_selector<2> sel)
+		    tensor_dlogk_twopf_line<number>::tensor_dlogk_twopf_line(const twopf_db_task<number>& tk, index_selector<2> sel)
 		      : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 		        gadget(tk),
-		        active_indices(sel)
+		        active_indices(sel),
+		        dimensionless(true)
 			    {
 			      if(!tk.get_collect_spectral_data())
               {
@@ -152,16 +168,19 @@ namespace transport
 
 
 		    template <typename number>
-		    tensor_nt_line<number>::tensor_nt_line(Json::Value& reader, task_finder<number>& finder)
+		    tensor_dlogk_twopf_line<number>::tensor_dlogk_twopf_line(Json::Value& reader, task_finder<number>& finder)
 			    : derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
             gadget(derived_line<number>::parent_tasks), // safe, will always be constructed after derived_line<number>()
 		        active_indices(reader)
 			    {
+			      const auto& root = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_ROOT];
+
+			      dimensionless = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_DIMENSIONLESS].asBool();
 			    }
 
 
 		    template <typename number>
-		    std::string tensor_nt_line<number>::make_LaTeX_label(unsigned int m, unsigned int n) const
+		    std::string tensor_dlogk_twopf_line<number>::make_LaTeX_label(unsigned int m, unsigned int n) const
 			    {
 				    assert(m <= 1);
 				    assert(n <= 1);
@@ -175,10 +194,10 @@ namespace transport
 		        std::ostringstream label;
 		        label << std::setprecision(this->precision);
 
-		        label << CPPTRANSPORT_LATEX_TENSOR_NT_SYMBOL << "(";
+		        label << CPPTRANSPORT_LATEX_DLOGK_SYMBOL << "(";
 
 		        if(m == 0)      label << CPPTRANSPORT_LATEX_TENSOR_SYMBOL;
-				    else if(m == 1) label << CPPTRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL;
+		        else if(m == 1) label << CPPTRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL;
 
 				    label << " ";
 
@@ -192,7 +211,7 @@ namespace transport
 
 
         template <typename number>
-        std::string tensor_nt_line<number>::make_non_LaTeX_label(unsigned int m, unsigned int n) const
+        std::string tensor_dlogk_twopf_line<number>::make_non_LaTeX_label(unsigned int m, unsigned int n) const
 	        {
             assert(m <= 1);
             assert(n <= 1);
@@ -206,7 +225,9 @@ namespace transport
             std::ostringstream label;
             label << std::setprecision(this->precision);
 
-            label << CPPTRANSPORT_NONLATEX_TENSOR_NT_SYMBOL << " (";
+            label << CPPTRANSPORT_NONLATEX_DLOGK_SYMBOL << " ";
+
+            if(this->dimensionless) label << CPPTRANSPORT_LATEX_DIMENSIONLESS_TWOPF_SYMBOL << "(";
 
             if(m == 0)      label << CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL;
             else if(m == 1) label << CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL;
@@ -216,21 +237,24 @@ namespace transport
             if(n == 0)      label << CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL;
             else if(n == 1) label << CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL;
 
-            label << ")";
+            if(this->dimensionless) label << ")";
 
             return(label.str());
 	        }
 
 
 		    template <typename number>
-		    void tensor_nt_line<number>::serialize(Json::Value& writer) const
+		    void tensor_dlogk_twopf_line<number>::serialize(Json::Value& writer) const
 			    {
 				    this->active_indices.serialize(writer);
+
+				    auto& root = writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_ROOT];
+				    root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_DLOGK_LINE_DIMENSIONLESS] = this->dimensionless;
 			    }
 
 
 		    template <typename number>
-		    void tensor_nt_line<number>::write(std::ostream& out)
+		    void tensor_dlogk_twopf_line<number>::write(std::ostream& out)
 			    {
 		        std::vector<std::string> names = { CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL, CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL };
 

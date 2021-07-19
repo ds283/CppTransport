@@ -39,7 +39,7 @@
 #include "transport-runtime/derived-products/line-collections/data_line.h"
 #include "transport-runtime/derived-products/derived-content/concepts/series/time_series.h"
 #include "transport-runtime/derived-products/derived-content/concepts/lines/tensor_twopf_line.h"
-#include "transport-runtime/derived-products/derived-content/concepts/lines/tensor_nt_line.h"
+#include "transport-runtime/derived-products/derived-content/concepts/lines/tensor_dlogk_twopf_line.h"
 
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
 
@@ -310,7 +310,7 @@ namespace transport
 
         //! tensor two-point spectral index time data line
         template <typename number=default_number_type>
-        class tensor_nt_time_series: public time_series<number>, public tensor_nt_line<number>
+        class tensor_dlogk_twopf_time_series: public time_series<number>, public tensor_dlogk_twopf_line<number>
           {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -318,14 +318,14 @@ namespace transport
           public:
 
             //! construct a tensor two-point spectral index time series data object
-            tensor_nt_time_series(const twopf_db_task<number>& tk, index_selector<2> sel,
-                                  SQL_time_query tq, SQL_twopf_query kq,
-                                  unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
+            tensor_dlogk_twopf_time_series(const twopf_db_task<number>& tk, index_selector<2> sel,
+                                           SQL_time_query tq, SQL_twopf_query kq,
+                                           unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
-            tensor_nt_time_series(Json::Value& reader, task_finder<number>& finder);
+            tensor_dlogk_twopf_time_series(Json::Value& reader, task_finder<number>& finder);
 
-            virtual ~tensor_nt_time_series() = default;
+            virtual ~tensor_dlogk_twopf_time_series() = default;
 
 
             // TYPE INTROSPECTION
@@ -367,7 +367,7 @@ namespace transport
           public:
 
             //! self-replicate
-            tensor_nt_time_series<number>* clone() const override { return new tensor_nt_time_series<number>(static_cast<const tensor_nt_time_series<number>&>(*this)); }
+            tensor_dlogk_twopf_time_series<number>* clone() const override { return new tensor_dlogk_twopf_time_series<number>(static_cast<const tensor_dlogk_twopf_time_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -403,11 +403,11 @@ namespace transport
         // derived_line<> is not called automatically during construction of time_series<>.
         // We have to call it ourselves
         template <typename number>
-        tensor_nt_time_series<number>::tensor_nt_time_series(const twopf_db_task<number>& tk, index_selector<2> sel,
-                                                             SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
+        tensor_dlogk_twopf_time_series<number>::tensor_dlogk_twopf_time_series(const twopf_db_task<number>& tk, index_selector<2> sel,
+                                                                               SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
           : derived_line<number>(make_derivable_task_set_element(tk, false, false, true),
                                  axis_class::time, { axis_value::efolds }, prec),
-            tensor_nt_line<number>(tk, sel),
+            tensor_dlogk_twopf_line<number>(tk, sel),
             time_series<number>(tk),
             tquery(tq),
             kquery(kq)
@@ -419,9 +419,9 @@ namespace transport
         // derived_line<> is not called automatically during construction of time_series<>.
         // We have to call it ourselves
         template <typename number>
-        tensor_nt_time_series<number>::tensor_nt_time_series(Json::Value& reader, task_finder<number>& finder)
+        tensor_dlogk_twopf_time_series<number>::tensor_dlogk_twopf_time_series(Json::Value& reader, task_finder<number>& finder)
           : derived_line<number>(reader, finder),
-            tensor_nt_line<number>(reader, finder),
+            tensor_dlogk_twopf_line<number>(reader, finder),
             time_series<number>(reader),
             tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
             kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
@@ -430,7 +430,7 @@ namespace transport
 
 
         template <typename number>
-        data_line_set<number> tensor_nt_time_series<number>::derive_lines
+        data_line_set<number> tensor_dlogk_twopf_time_series<number>::derive_lines
           (datapipe<number>& pipe, const tag_list& tags, slave_message_buffer& messages) const
           {
             // attach our datapipe to a content group
@@ -466,7 +466,26 @@ namespace transport
 
                             std::vector<number> line_data = t_handle.lookup_tag(tag);
 
-                            time_data_line_factory(*this, lines, group, this->x_type, value_type::spectral_index, t_axis,
+                            value_type value;
+                            if(this->dimensionless)
+                              {
+                                for(unsigned int j = 0; j < line_data.size(); ++j)
+                                  {
+                                    line_data[j] *= 1.0 / (2.0 * M_PI * M_PI);
+                                  }
+                                value = value_type::dimensionless;
+                              }
+                            else
+                              {
+                                double k_cube = k_value.k_comoving * k_value.k_comoving * k_value.k_comoving;
+                                for(unsigned int j = 0; j < line_data.size(); ++j)
+                                  {
+                                    line_data[j] *= 1.0 / k_cube;
+                                  }
+                                value = value_type::correlation_function;
+                              }
+
+                            time_data_line_factory(*this, lines, group, this->x_type, value, t_axis,
                                                    line_data, this->get_LaTeX_label(m, n, k_value),
                                                    this->get_non_LaTeX_label(m, n, k_value), messages);
                           }
@@ -481,7 +500,7 @@ namespace transport
 
 
         template <typename number>
-        std::string tensor_nt_time_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const
+        std::string tensor_dlogk_twopf_time_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const
           {
             std::string tag = this->make_LaTeX_tag(k);
             std::string label;
@@ -501,7 +520,7 @@ namespace transport
 
 
         template <typename number>
-        std::string tensor_nt_time_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const
+        std::string tensor_dlogk_twopf_time_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const
           {
             std::string tag = this->make_non_LaTeX_tag(k);
             std::string label;
@@ -523,9 +542,9 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the write method for
         // derived_line<> is not called from time_series<>. We have to call it for ourselves.
         template <typename number>
-        void tensor_nt_time_series<number>::write(std::ostream& out)
+        void tensor_dlogk_twopf_time_series<number>::write(std::ostream& out)
           {
-            this->tensor_nt_line<number>::write(out);
+            this->tensor_dlogk_twopf_line<number>::write(out);
             this->time_series<number>::write(out);
             this->derived_line<number>::write(out);
           }
@@ -534,15 +553,15 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the serialize method for
         // derived_line<> is not called from time_series<>. We have to call it for ourselves.
         template <typename number>
-        void tensor_nt_time_series<number>::serialize(Json::Value& writer) const
+        void tensor_dlogk_twopf_time_series<number>::serialize(Json::Value& writer) const
           {
-            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_NT_TIME_SERIES);
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_DLOGK_TIME_SERIES);
 
             this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
             this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
-            this->tensor_nt_line<number>::serialize(writer);
+            this->tensor_dlogk_twopf_line<number>::serialize(writer);
             this->time_series<number>::serialize(writer);
           }
 

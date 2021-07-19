@@ -297,7 +297,7 @@ namespace transport
 
             //! write details for a tensor twopf spectral index line
             template <typename number>
-            void write_tensor_nt_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_line<number>& line, HTML_node& parent);
+            void write_tensor_nt_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_dlogk_twopf_line<number>& line, HTML_node& parent);
 
             //! write details for an fNL line
             template <typename number>
@@ -348,7 +348,7 @@ namespace transport
 
             //! write details for a tensor spectral index time series line
             template <typename number>
-            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_time_series<number>& line, HTML_node& parent);
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_dlogk_twopf_time_series<number>& line, HTML_node& parent);
 
             //! write details for a zeta twopf time series line
             template <typename number>
@@ -380,7 +380,7 @@ namespace transport
 
             //! write details for a tensor spectral index wavenumber series line
             template <typename number>
-            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_wavenumber_series<number>& line, HTML_node& parent);
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_dlogk_twopf_wavenumber_series<number>& line, HTML_node& parent);
 
             //! write details for a zeta twopf wavenumber series line
             template <typename number>
@@ -2597,7 +2597,7 @@ namespace transport
 
                             case derived_data::derived_line_type::tensor_nt_time:
                               {
-                                const auto& ln = dynamic_cast< derived_data::tensor_nt_time_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::tensor_dlogk_twopf_time_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
@@ -2653,7 +2653,7 @@ namespace transport
 
                             case derived_data::derived_line_type::tensor_nt_wavenumber:
                               {
-                                const auto& ln = dynamic_cast< derived_data::tensor_nt_wavenumber_series<number>& >(*line);
+                                const auto& ln = dynamic_cast< derived_data::tensor_dlogk_twopf_wavenumber_series<number>& >(*line);
                                 this->write_derived_line(bundle, ln, item);
                                 break;
                               }
@@ -2975,7 +2975,7 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_tensor_nt_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_line<number>& line, HTML_node& parent)
+        void HTML_report::write_tensor_nt_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_dlogk_twopf_line<number>& line, HTML_node& parent)
           {
             // not currently used
           }
@@ -3181,7 +3181,7 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_time_series<number>& line, HTML_node& parent)
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_dlogk_twopf_time_series<number>& line, HTML_node& parent)
           {
             this->derived_line_title("tensor 2-point function spectral index &mdash; time data", parent);
 
@@ -3280,7 +3280,7 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_nt_wavenumber_series<number>& line, HTML_node& parent)
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_dlogk_twopf_wavenumber_series<number>& line, HTML_node& parent)
           {
             this->derived_line_title("tensor 2-point function spectral index &mdash; momentum-configuration data", parent);
 

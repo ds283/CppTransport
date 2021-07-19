@@ -106,7 +106,7 @@ namespace transport
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES                         = "twopf-time-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES                       = "threepf-time-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_TIME_SERIES                  = "tensor-twopf-time-series";
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_NT_TIME_SERIES               = "tensor-twopf-spectral-time-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_DLOGK_TIME_SERIES               = "tensor-twopf-spectral-time-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES                    = "zeta-twopf-time-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_NS_TIME_SERIES                 = "zeta-twopf-spectral-time-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES                  = "zeta-threepf-time-series";
@@ -114,7 +114,7 @@ namespace transport
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES                   = "twopf-k-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES                 = "threepf-k-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_WAVENUMBER_SERIES            = "tensor-twopf-k-series";
-        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_NT_WAVENUMBER_SERIES         = "tensor-twopf-spectral-k-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_DLOGK_WAVENUMBER_SERIES         = "tensor-twopf-spectral-k-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_WAVENUMBER_SERIES              = "zeta-twopf-k-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_NS_WAVENUMBER_SERIES           = "zeta-twopf-spectral-k-series";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES            = "zeta-threepf-k-series";

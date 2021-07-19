@@ -56,20 +56,20 @@
 #include "transport-runtime/derived-products/derived-content/utilities/twopf_db_task_gadget.h"
 
 
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT          "twopf-line-settings"
-
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE          "components"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL          "real"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY     "imaginary"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS "dimensionless"
-
-
-
 namespace transport
 	{
 
     namespace derived_data
 	    {
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT = "twopf-line-settings";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE = "components";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL = "real";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY = "imaginary";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS = "dimensionless";
+
+
 
         //! general field twopf content producer, suitable
         //! for producing content usable in eg. a 2d plot or table.
@@ -156,7 +156,7 @@ namespace transport
             //! record which type of 2pf we are plotting
             twopf_type twopf_meaning;
 
-		        //! compute the dimensionless twopf?
+		        //! compute the dimensionless correlation function?
 		        bool dimensionless;
 
 	        };
@@ -187,9 +187,11 @@ namespace transport
             gadget(derived_line<number>::parent_tasks), // safe, will always be constructed after derived_line<number>()
 		        active_indices(reader)
 			    {
-				    dimensionless = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS].asBool();
+            const auto& root = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT];
 
-		        std::string tpf_type = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE].asString();
+            dimensionless = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS].asBool();
+
+		        std::string tpf_type = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE].asString();
 
 		        if(tpf_type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL) twopf_meaning = twopf_type::real;
 		        else if(tpf_type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY) twopf_meaning = twopf_type::imaginary;
@@ -209,7 +211,7 @@ namespace transport
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
-				    if(this->dimensionless) label << CPPTRANSPORT_LATEX_DIMENSIONLESS_TWOPF_SYMBOL << "_{";
+				    if(this->dimensionless) label << CPPTRANSPORT_LATEX_DIMENSIONLESS_TWOPF_SYMBOL << "(";
 
 		        label << (this->twopf_meaning == twopf_type::real ? CPPTRANSPORT_LATEX_RE_SYMBOL : CPPTRANSPORT_LATEX_IM_SYMBOL) << " ";
 
@@ -230,7 +232,7 @@ namespace transport
                   break;
               }
 
-				    if(this->dimensionless) label << "}";
+				    if(this->dimensionless) label << ")";
 
 		        return (label.str());
 			    }
@@ -275,18 +277,20 @@ namespace transport
 			    {
 				    this->active_indices.serialize(writer);
 
-		        switch(this->twopf_meaning)
+            auto& root = writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT];
+
+            switch(this->twopf_meaning)
 			        {
                 case twopf_type::real:
-		                writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL);
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL);
 		                break;
 
                 case twopf_type::imaginary:
-		                writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY);
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY);
 		                break;
               }
 
-				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
+            root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
 			    }
 
 
