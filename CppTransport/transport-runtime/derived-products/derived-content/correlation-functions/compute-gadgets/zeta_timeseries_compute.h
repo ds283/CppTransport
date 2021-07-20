@@ -293,6 +293,9 @@ namespace transport
               }
             
             // if recording spectral data, go through and take ratio (N_a N_b n^ab) / (N_a N_b Sigma^ab)
+            // However, our definition of n^ab gives the spectral index for the raw power spectrum P
+            // rather than the dimensionless power spectrum \cal{P}, so we need to adjust it by a +3 offset.
+            // Then we have another +1 because the scalar spectral index is defined as n_s-1 rather than just n_s
             if(h.has_spectral)
               {
                 for(unsigned int j = 0; j < t_axis_size; ++j)

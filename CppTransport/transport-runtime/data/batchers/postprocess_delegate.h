@@ -69,7 +69,7 @@ namespace transport
 
       public:
 
-        //! compute the zeta twopf
+        //! compute the zeta twopf and spectral index
         void zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& twopf_si,
                         const std::vector<number>& bg, number& zeta_twopf, number& ns,
                         std::vector<number>& gauge_xfm1, bool precomputed);
